@@ -49,7 +49,7 @@ select {
   background: var(--header);
   color: white;
   display: grid;
-  grid-template-columns: 44px 1fr 44px;
+  grid-template-columns: auto 1fr 44px;
   align-items: center;
   padding: 6px 10px;
   margin-bottom: 1px;
@@ -62,25 +62,22 @@ select {
   min-width: 0;
 }
 
-.title-spacer {
-  width: 44px;
-  height: 1px;
-}
-
 .help-button {
-  width: 30px;
-  height: 30px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
+  min-width: 58px;
+  height: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
   color: #fff;
-  font-size: 18px;
+  font-size: 13px;
   font-weight: 700;
-  line-height: 1;
+  letter-spacing: 0;
   cursor: pointer;
-  display: grid;
-  place-items: center;
-  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  margin-right: 10px;
 }
 
 .help-button:hover {
@@ -651,12 +648,13 @@ tbody tr:nth-child(even) {
   }
 
   .title-bar {
-    grid-template-columns: 36px 1fr 36px;
+    grid-template-columns: auto 1fr 36px;
   }
 
   .help-button {
-    width: 26px;
+    min-width: 52px;
     height: 26px;
-    font-size: 16px;
+    font-size: 12px;
+    padding: 0 10px;
   }
 }

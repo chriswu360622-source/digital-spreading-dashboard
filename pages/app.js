@@ -361,7 +361,7 @@ function renderComboChart(node, data, config) {
               const labelY = Math.max(pad.top + 11, y - 4);
               const labelDx = config.bars.length > 1 ? (j === 0 ? -3 : 3) : 0;
               return `<rect x="${x}" y="${y}" width="${barW - 2}" height="${h}" fill="${bar.color}" />
-                <text x="${x + barW / 2}" y="${labelY}" dx="${labelDx}" text-anchor="middle" font-size="${valueFontSize}" font-weight="700" fill="#2b3440" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${bar.format(d[bar.key])}</text>`;
+                <text class="chart-value chart-bar-value" x="${x + barW / 2}" y="${labelY}" dx="${labelDx}" text-anchor="middle" font-size="${valueFontSize}" font-weight="700">${bar.format(d[bar.key])}</text>`;
             })
             .join("")}
           </g>`;
@@ -378,13 +378,13 @@ function renderComboChart(node, data, config) {
               const labelY = Math.max(pad.top + 11, Math.min(pad.top + plotH - 6, y + labelDy));
               return `<g class="chart-item ${selectionClass(config.filterType, filterKey)}" data-clickable="true" data-filter-type="${config.filterType}" data-filter-key="${filterKey}">
                 <circle cx="${x}" cy="${y}" r="5" fill="${line.color}" />
-                <text x="${x}" y="${labelY}" text-anchor="middle" font-size="${valueFontSize}" font-weight="700" fill="${line.color}" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${fmt.pct(d[line.key])}</text>
+                <text class="chart-value chart-line-value" x="${x}" y="${labelY}" text-anchor="middle" font-size="${valueFontSize}" font-weight="700" fill="${line.color}">${fmt.pct(d[line.key])}</text>
               </g>`;
             })
             .join("")}`)
         .join("")}
       ${data
-        .map((d, i) => `<text x="${pad.left + i * groupW + groupW / 2}" y="${xLabelY}" text-anchor="middle" font-size="${labelFontSize}" fill="#586573" stroke="#ffffff" stroke-width="2.5" paint-order="stroke fill">${d.label}</text>`)
+        .map((d, i) => `<text class="chart-label" x="${pad.left + i * groupW + groupW / 2}" y="${xLabelY}" text-anchor="middle" font-size="${labelFontSize}">${d.label}</text>`)
         .join("")}
     </svg>`;
   node.querySelectorAll("[data-clickable='true']").forEach((item) => {
@@ -421,8 +421,8 @@ function renderVarianceChart(detail) {
           const labelY = height - 10;
           return `<g class="chart-item ${selectionClass("roll", d.label)}" data-clickable="true" data-filter-type="roll" data-filter-key="${d.label}">
             <rect x="${x}" y="${y}" width="${barW}" height="${h}" fill="${color}" />
-            <text x="${x + barW / 2}" y="${valueY}" text-anchor="middle" font-size="10" font-weight="700" fill="${color}" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${Math.round(d.value)}</text>
-            <text transform="translate(${x + barW / 2},${labelY}) rotate(-35)" text-anchor="end" font-size="8" fill="#586573" stroke="#ffffff" stroke-width="2" paint-order="stroke fill">${d.label}</text>
+            <text class="chart-value chart-variance-value" x="${x + barW / 2}" y="${valueY}" text-anchor="middle" font-size="10" font-weight="700" fill="${color}">${Math.round(d.value)}</text>
+            <text class="chart-label chart-variance-label" transform="translate(${x + barW / 2},${labelY}) rotate(-35)" text-anchor="end" font-size="8">${d.label}</text>
           </g>`;
         })
         .join("")}

@@ -1,5 +1,5 @@
 window.DIGITAL_SPREADING_DATA = {
-  "generatedAt": "2026-06-23T15:35:23",
+  "generatedAt": "2026-06-23T15:44:05",
   "sourceWorkbook": "C:\\Users\\kobe1\\Desktop\\AI Dashboard\\Digital Spreading Dashboard Input\\Digital Spreading R.16-Database.xlsx",
   "sourceFolder": "C:\\Users\\kobe1\\Desktop\\AI Dashboard\\Digital Spreading Dashboard Input",
   "defaults": {

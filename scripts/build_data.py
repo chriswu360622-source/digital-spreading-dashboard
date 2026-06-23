@@ -85,6 +85,40 @@ def normalize_datetime(value: Any, fallback_date: str | None = None) -> str | No
     return text
 
 
+def to_datetime(value: Any, fallback_date: str | None = None) -> datetime | None:
+    if value is None or value == "":
+        return None
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, date) and not isinstance(value, datetime):
+        return datetime.combine(value, time())
+    if isinstance(value, time):
+        base = date.fromisoformat(fallback_date) if fallback_date else date(1899, 12, 30)
+        return datetime.combine(base, value)
+    if isinstance(value, (int, float)):
+        return excel_serial_to_datetime(value)
+    text_value = str(value).strip()
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y/%m/%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S", "%H:%M:%S", "%H:%M"):
+        try:
+            parsed = datetime.strptime(text_value, fmt)
+            if fmt.startswith("%H") and fallback_date:
+                parsed = datetime.combine(date.fromisoformat(fallback_date), parsed.time())
+            return parsed
+        except ValueError:
+            pass
+    return None
+
+
+def elapsed_hours(start_value: Any, end_value: Any, fallback_date: str | None = None) -> float:
+    start_dt = to_datetime(start_value, fallback_date)
+    end_dt = to_datetime(end_value, fallback_date)
+    if start_dt and end_dt:
+        delta = (end_dt - start_dt).total_seconds()
+        if delta >= 0:
+            return delta / 3600
+    return 0.0
+
+
 def time_to_hours(value: Any) -> float:
     if value is None or value == "":
         return 0.0
@@ -188,8 +222,8 @@ def build() -> None:
             "spreader": text(row.get("Spreader")),
             "startTime": normalize_datetime(row.get("Start Time"), spreading_date),
             "endTime": normalize_datetime(row.get("End Time"), spreading_date),
-            "spreadingTimeHours": time_to_hours(row.get("Spreading Time (hh:mm)")),
-            "spreadingTimeSeconds": number(row.get("Spreading Time (secs)")),
+            "spreadingTimeHours": elapsed_hours(row.get("Start Time"), row.get("End Time"), spreading_date),
+            "spreadingTimeSeconds": elapsed_hours(row.get("Start Time"), row.get("End Time"), spreading_date) * 3600,
             "spreaderName": text(row.get("Spreader Name")),
         }
         summary.append(item)
@@ -235,7 +269,7 @@ def build() -> None:
             "varianceYard": number(row.get("Variance (Yard)")),
             "startTime": normalize_datetime(row.get("Start Time"), spreading_date),
             "endTime": normalize_datetime(row.get("End Time"), spreading_date),
-            "spreadingTimeHours": time_to_hours(row.get("Spreading Time (hh:mm)")),
+            "spreadingTimeHours": elapsed_hours(row.get("Start Time"), row.get("End Time"), spreading_date),
             "spreader": parent.get("spreader", ""),
             "spreaderName": parent.get("spreaderName", ""),
             "remarkSpreading": parent.get("remarkSpreading", ""),

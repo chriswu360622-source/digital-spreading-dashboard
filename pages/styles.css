@@ -279,6 +279,13 @@ select {
   height: 100%;
 }
 
+.chart svg text {
+  paint-order: stroke fill;
+  stroke: #ffffff;
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
 .chart [data-clickable="true"] {
   cursor: pointer;
   transition: opacity 140ms ease, filter 140ms ease, stroke-width 140ms ease;

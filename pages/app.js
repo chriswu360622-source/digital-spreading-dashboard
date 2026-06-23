@@ -358,8 +358,10 @@ function renderComboChart(node, data, config) {
               const h = (d[bar.key] / barMax) * plotH;
               const x = start + j * barW;
               const y = pad.top + plotH - h;
+              const labelY = Math.max(pad.top + 11, y - 4);
+              const labelDx = config.bars.length > 1 ? (j === 0 ? -3 : 3) : 0;
               return `<rect x="${x}" y="${y}" width="${barW - 2}" height="${h}" fill="${bar.color}" />
-                <text x="${x + barW / 2}" y="${Math.max(12, y - 4)}" text-anchor="middle" font-size="${valueFontSize}" fill="#667282">${bar.format(d[bar.key])}</text>`;
+                <text x="${x + barW / 2}" y="${labelY}" dx="${labelDx}" text-anchor="middle" font-size="${valueFontSize}" font-weight="700" fill="#2b3440" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${bar.format(d[bar.key])}</text>`;
             })
             .join("")}
           </g>`;
@@ -372,15 +374,17 @@ function renderComboChart(node, data, config) {
               const x = pad.left + i * groupW + groupW / 2;
               const y = pad.top + plotH - (d[line.key] / pctMax) * plotH;
               const filterKey = config.filterKey ? config.filterKey(d) : d.label;
+              const labelDy = line.labelDy ?? (line.key === "utilization" ? 14 : -10);
+              const labelY = Math.max(pad.top + 11, Math.min(pad.top + plotH - 6, y + labelDy));
               return `<g class="chart-item ${selectionClass(config.filterType, filterKey)}" data-clickable="true" data-filter-type="${config.filterType}" data-filter-key="${filterKey}">
                 <circle cx="${x}" cy="${y}" r="5" fill="${line.color}" />
-                <text x="${x}" y="${y - 8}" text-anchor="middle" font-size="${valueFontSize}" fill="#667282">${fmt.pct(d[line.key])}</text>
+                <text x="${x}" y="${labelY}" text-anchor="middle" font-size="${valueFontSize}" font-weight="700" fill="${line.color}" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${fmt.pct(d[line.key])}</text>
               </g>`;
             })
             .join("")}`)
         .join("")}
       ${data
-        .map((d, i) => `<text x="${pad.left + i * groupW + groupW / 2}" y="${xLabelY}" text-anchor="middle" font-size="${labelFontSize}" fill="#667282">${d.label}</text>`)
+        .map((d, i) => `<text x="${pad.left + i * groupW + groupW / 2}" y="${xLabelY}" text-anchor="middle" font-size="${labelFontSize}" fill="#586573" stroke="#ffffff" stroke-width="2.5" paint-order="stroke fill">${d.label}</text>`)
         .join("")}
     </svg>`;
   node.querySelectorAll("[data-clickable='true']").forEach((item) => {
@@ -413,12 +417,12 @@ function renderVarianceChart(detail) {
           const h = (Math.abs(d.value) / max) * (plotH / 2 - 6);
           const y = d.value >= 0 ? zero - h : zero;
           const color = d.value >= 0 ? "var(--green)" : "var(--red)";
-          const valueY = d.value >= 0 ? Math.max(pad.top + 12, y - 4) : Math.min(height - 20, y + h + 14);
+          const valueY = d.value >= 0 ? Math.max(pad.top + 11, y - 4) : Math.min(height - 16, y + h + 12);
           const labelY = height - 10;
           return `<g class="chart-item ${selectionClass("roll", d.label)}" data-clickable="true" data-filter-type="roll" data-filter-key="${d.label}">
             <rect x="${x}" y="${y}" width="${barW}" height="${h}" fill="${color}" />
-            <text x="${x + barW / 2}" y="${valueY}" text-anchor="middle" font-size="11" fill="#667282">${Math.round(d.value)}</text>
-            <text transform="translate(${x + barW / 2},${labelY}) rotate(-35)" text-anchor="end" font-size="8" fill="#667282">${d.label}</text>
+            <text x="${x + barW / 2}" y="${valueY}" text-anchor="middle" font-size="10" font-weight="700" fill="${color}" stroke="#ffffff" stroke-width="3" paint-order="stroke fill">${Math.round(d.value)}</text>
+            <text transform="translate(${x + barW / 2},${labelY}) rotate(-35)" text-anchor="end" font-size="8" fill="#586573" stroke="#ffffff" stroke-width="2" paint-order="stroke fill">${d.label}</text>
           </g>`;
         })
         .join("")}
@@ -503,7 +507,7 @@ function render() {
     filterType: "spreader",
     leftAxis: "Yards",
     bars: [{ key: "yards", label: "Total Yards (Spread)", color: "var(--blue)", format: (v) => fmt.number(v, 0) }],
-    lines: [{ key: "pct", label: "EFF %", color: "var(--red)" }],
+    lines: [{ key: "pct", label: "EFF %", color: "var(--red)", labelDy: -12 }],
   });
   renderComboChart(el.machineChart, aggregateMachine(values.machine), {
     filterType: "spreadingTable",
@@ -514,8 +518,8 @@ function render() {
       { key: "yards", label: "Total Spread (Y)", color: "var(--blue)", format: (v) => fmt.number(v, 0) },
     ],
     lines: [
-      { key: "completion", label: "Output completion", color: "var(--orange)" },
-      { key: "utilization", label: "machine utilization", color: "var(--purple)" },
+      { key: "completion", label: "Output completion", color: "var(--orange)", labelDy: -12 },
+      { key: "utilization", label: "machine utilization", color: "var(--purple)", labelDy: 14 },
     ],
   });
   renderVarianceChart(detail);

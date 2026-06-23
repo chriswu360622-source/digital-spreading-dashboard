@@ -528,7 +528,7 @@ function render() {
 
 function initFilters() {
   const dates = unique(raw.summary.map((row) => row.spreadingDate));
-  const defaultDate = dates.includes("2026-06-18") ? "2026-06-18" : dates[dates.length - 1];
+  const defaultDate = dates[dates.length - 1] || "";
   state.startDate = defaultDate;
   state.endDate = defaultDate;
   state.tableFilter = null;

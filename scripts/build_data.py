@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, date, time, timedelta
+from functools import cmp_to_key
 from pathlib import Path
 from typing import Any
 
@@ -131,12 +132,31 @@ def rows_from_sheet(wb, sheet_name: str) -> list[dict[str, Any]]:
     return rows
 
 
+def pick_sheet_name(wb, preferred: list[str], fallback_contains: list[str] | None = None) -> str:
+    available = set(wb.sheetnames)
+    for name in preferred:
+        if name in available:
+            return name
+    if fallback_contains:
+        for name in wb.sheetnames:
+            lowered = name.casefold()
+            if any(token.casefold() in lowered for token in fallback_contains):
+                return name
+    raise KeyError(f"None of the expected sheets exist. Available sheets: {', '.join(wb.sheetnames)}")
+
+
 def build() -> None:
     source_xlsx = find_source_workbook()
     wb = load_workbook(source_xlsx, data_only=True)
-    summary_rows = rows_from_sheet(wb, "Summary")
-    detail_rows = rows_from_sheet(wb, "Detail")
-    table_rows = rows_from_sheet(wb, "Sheet3")
+    summary_sheet = pick_sheet_name(wb, ["Summary"], ["summary"])
+    detail_sheet = pick_sheet_name(wb, ["Detail"], ["detail"])
+    summary_rows = rows_from_sheet(wb, summary_sheet)
+    detail_rows = rows_from_sheet(wb, detail_sheet)
+    table_rows = []
+    for candidate in ["Sheet3", "data", "Data"]:
+        if candidate in wb.sheetnames:
+            table_rows = rows_from_sheet(wb, candidate)
+            break
 
     summary: list[dict[str, Any]] = []
     summary_by_cutref: dict[str, dict[str, Any]] = {}
@@ -223,17 +243,23 @@ def build() -> None:
         detail.append(item)
 
     spreading_tables = []
-    for row in table_rows:
-        table = text(row.get("Spreading Table"))
-        if table:
-            spreading_tables.append(
-                {
-                    "spreadingTable": table,
-                    "idNumber": text(row.get("ID Number")),
-                    "name": text(row.get("Name")),
-                    "note": text(row.get("COL4")),
-                }
-            )
+    if table_rows:
+        for row in table_rows:
+            table = text(row.get("Spreading Table"))
+            if table:
+                spreading_tables.append(
+                    {
+                        "spreadingTable": table,
+                        "idNumber": text(row.get("ID Number")),
+                        "name": text(row.get("Name")),
+                        "note": text(row.get("COL4")),
+                    }
+                )
+    else:
+        spreading_tables = [
+            {"spreadingTable": table}
+            for table in sorted({row["spreadingTable"] for row in summary if row["spreadingTable"]}, key=cmp_to_key(tableSort))
+        ]
 
     payload = {
         "generatedAt": datetime.now().isoformat(timespec="seconds"),

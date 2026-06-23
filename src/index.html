@@ -9,9 +9,11 @@
   <body>
     <main id="dashboardApp" class="app">
       <header class="title-bar">
-        <div>
+        <button id="helpButton" class="help-button" type="button" aria-label="Help">?</button>
+        <div class="title-wrap">
           <h1>Digital Spreading Monitoring</h1>
         </div>
+        <div class="title-spacer" aria-hidden="true"></div>
       </header>
 
       <section class="control-band">
@@ -100,6 +102,19 @@
         <span>Actual work time: 7.5h base, overtime after 16:30 rounded up by 30m.</span>
       </footer>
     </main>
+
+    <dialog id="helpDialog" class="help-dialog" aria-labelledby="helpDialogTitle">
+      <div class="help-dialog-shell">
+        <div class="help-dialog-head">
+          <div>
+            <h2 id="helpDialogTitle">Dashboard Data Reference</h2>
+            <p>Source tables, column names, and calculation rules used by this dashboard.</p>
+          </div>
+          <button id="helpCloseButton" class="help-close" type="button" aria-label="Close help">×</button>
+        </div>
+        <div id="helpDialogBody" class="help-dialog-body"></div>
+      </div>
+    </dialog>
 
     <script src="../data/dashboard-data.js"></script>
     <script src="./app.js"></script>

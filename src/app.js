@@ -53,6 +53,10 @@ const fmt = {
 
 const el = {
   dashboardApp: document.querySelector("#dashboardApp"),
+  helpButton: document.querySelector("#helpButton"),
+  helpDialog: document.querySelector("#helpDialog"),
+  helpCloseButton: document.querySelector("#helpCloseButton"),
+  helpDialogBody: document.querySelector("#helpDialogBody"),
   startDate: document.querySelector("#startDate"),
   endDate: document.querySelector("#endDate"),
   statusSelect: document.querySelector("#statusSelect"),
@@ -65,6 +69,116 @@ const el = {
   detailBody: document.querySelector("#detailBody"),
   rowCount: document.querySelector("#rowCount"),
   generatedAt: document.querySelector("#generatedAt"),
+};
+
+const helpSpec = {
+  sources: [
+    { label: "Primary workbook", value: "Digital Spreading Dashboard Input / Digital Spreading R.16-Database.xlsx" },
+    { label: "Power BI reference", value: "Digital Spreading Dashboard Input / Digital Spreading Monitoring.pbix" },
+    { label: "Published data bundle", value: "work/digital-spreading-dashboard/pages/data/dashboard-data.json" },
+  ],
+  summaryColumns: [
+    "Factory",
+    "CutRef",
+    "Spreading Status",
+    "Spreading Ref",
+    "Spreading Date",
+    "Cut Cell",
+    "Cut#",
+    "Marker Name",
+    "Marker No.",
+    "Marker Length (Yard)",
+    "Fabric Combo",
+    "Article",
+    "Color",
+    "Size",
+    "Layers",
+    "Total Cons. (Yard)",
+    "Spreading Table",
+    "Layer Spread",
+    "Total Yards (Spread)",
+    "Bal. Yards",
+    "Remark (Spreading)",
+    "Spreader",
+    "Start Time",
+    "End Time",
+    "Spreader Name",
+  ],
+  detailColumns: [
+    "Factory",
+    "CutRef",
+    "Spreading Status",
+    "Spreading Ref",
+    "Cut Cell",
+    "Cut#",
+    "Sub CutNo",
+    "Marker Name",
+    "Marker No.",
+    "Marker Length (Yard)",
+    "Fabric Combo",
+    "Article",
+    "Color",
+    "Size",
+    "Layers",
+    "Total Cons. (Yard)",
+    "Spreading Table",
+    "Seq",
+    "Roll",
+    "Dyelot",
+    "Fabric Tone",
+    "Ticket /Remain Yards",
+    "Layer Spread",
+    "Total Yards (Spread)",
+    "Merge Fabric (Yard)",
+    "Use Cutends (Yard)",
+    "Damage (Yard)",
+    "Remain Yards",
+    "Ori Cutends (Yard)",
+    "Variance (Yard)",
+    "Start Time",
+    "End Time",
+    "Spreading Time (Sec)",
+  ],
+  dataSheetColumns: ["Spreading Table", "ID Number", "Name", "COL4"],
+  formulas: [
+    {
+      title: "Actual Working Hours",
+      formula:
+        "Latest End Time <= 16:30 => 7.5h; otherwise overtime after 16:30 is rounded up to the next 30-minute bucket and added to 7.5h.",
+    },
+    {
+      title: "Target Output",
+      formula: "Actual Working Hours x Hourly Target.",
+    },
+    {
+      title: "EFF %",
+      formula: "Total Yards (Spread) / Target Output, calculated by spreader and date.",
+    },
+    {
+      title: "Spreading Efficiency",
+      formula: "Average of spreader/date EFF % values in the selected filter context.",
+    },
+    {
+      title: "Machine Efficiency / Output Completion",
+      formula: "Total Yards (Spread) / Target Output, calculated by spreading table and date.",
+    },
+    {
+      title: "Spreading Time",
+      formula: "End Time - Start Time, used as running time for machine utilization.",
+    },
+    {
+      title: "Machine Utilization",
+      formula: "Sum of Spreading Time / Actual Working Hours, averaged across the selected table/date context.",
+    },
+    {
+      title: "Utilization %",
+      formula: "Average of machine-level utilization values in the selected filter context.",
+    },
+    {
+      title: "Variance Split",
+      formula: "Positive variance = Excess Yard; negative variance = Lacking Yard.",
+    },
+  ],
 };
 
 function unique(values) {
@@ -132,6 +246,50 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
+}
+
+function renderHelpDialog() {
+  const list = (items) => `<ul class="help-list">${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`;
+  const sourceRows = helpSpec.sources
+    .map(
+      (row) =>
+        `<tr><th>${escapeHtml(row.label)}</th><td>${escapeHtml(row.value)}</td></tr>`,
+    )
+    .join("");
+  const formulaCards = helpSpec.formulas
+    .map(
+      (item) => `
+        <article class="help-card">
+          <h3>${escapeHtml(item.title)}</h3>
+          <p>${escapeHtml(item.formula)}</p>
+        </article>`,
+    )
+    .join("");
+  el.helpDialogBody.innerHTML = `
+    <p class="help-note">The dashboard is generated from the Excel workbook, then published as a static data bundle for the web dashboard.</p>
+    <section class="help-section">
+      <h3>Data Sources</h3>
+      <table class="help-table">
+        <tbody>${sourceRows}</tbody>
+      </table>
+    </section>
+    <section class="help-section">
+      <h3>Summary Sheet Columns</h3>
+      ${list(helpSpec.summaryColumns)}
+    </section>
+    <section class="help-section">
+      <h3>Detail Sheet Columns</h3>
+      ${list(helpSpec.detailColumns)}
+    </section>
+    <section class="help-section">
+      <h3>Table Sheet Columns</h3>
+      ${list(helpSpec.dataSheetColumns)}
+    </section>
+    <section class="help-section help-formulas">
+      <h3>Calculation Rules</h3>
+      <div class="help-cards">${formulaCards}</div>
+    </section>
+  `;
 }
 
 const detailColumns = [
@@ -553,6 +711,29 @@ function initFilters() {
 }
 
 function wireEvents() {
+  el.helpButton.addEventListener("click", () => {
+    renderHelpDialog();
+    if (typeof el.helpDialog.showModal === "function") {
+      el.helpDialog.showModal();
+    } else {
+      el.helpDialog.setAttribute("open", "");
+    }
+  });
+  el.helpCloseButton.addEventListener("click", () => {
+    el.helpDialog.close?.();
+    el.helpDialog.removeAttribute("open");
+  });
+  el.helpDialog.addEventListener("click", (event) => {
+    if (event.target === el.helpDialog) {
+      el.helpDialog.close?.();
+      el.helpDialog.removeAttribute("open");
+    }
+  });
+  el.helpDialog.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    el.helpDialog.close?.();
+    el.helpDialog.removeAttribute("open");
+  });
   el.startDate.addEventListener("change", () => {
     state.startDate = el.startDate.value;
     if (state.endDate < state.startDate) {
@@ -594,6 +775,7 @@ function wireEvents() {
 function init() {
   initFilters();
   wireEvents();
+  renderHelpDialog();
   el.generatedAt.textContent = `Data generated ${new Date(raw.generatedAt).toLocaleString()}`;
   render();
   startAutoRefresh();

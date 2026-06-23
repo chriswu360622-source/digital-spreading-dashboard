@@ -77,69 +77,52 @@ const helpSpec = {
     { label: "Power BI reference", value: "Digital Spreading Dashboard Input / Digital Spreading Monitoring.pbix" },
     { label: "Published data bundle", value: "work/digital-spreading-dashboard/pages/data/dashboard-data.json" },
   ],
-  summaryColumns: [
-    "Factory",
-    "CutRef",
-    "Spreading Status",
-    "Spreading Ref",
-    "Spreading Date",
-    "Cut Cell",
-    "Cut#",
-    "Marker Name",
-    "Marker No.",
-    "Marker Length (Yard)",
-    "Fabric Combo",
-    "Article",
-    "Color",
-    "Size",
-    "Layers",
-    "Total Cons. (Yard)",
-    "Spreading Table",
-    "Layer Spread",
-    "Total Yards (Spread)",
-    "Bal. Yards",
-    "Remark (Spreading)",
-    "Spreader",
-    "Start Time",
-    "End Time",
-    "Spreader Name",
+  terms: [
+    {
+      title: "Count of CutRef",
+      description: "Distinct count of CutRef in the filtered summary data.",
+    },
+    {
+      title: "Spread Qty (Yard)",
+      description: "Sum of Total Yards (Spread) from the filtered detail rows.",
+    },
+    {
+      title: "Damage (Yard)",
+      description: "Sum of Damage (Yard) from the filtered detail rows.",
+    },
+    {
+      title: "Excess Yard",
+      description: "Positive part of Variance (Yard) after summing the filtered detail rows.",
+    },
+    {
+      title: "Lacking Yard",
+      description: "Negative part of Variance (Yard) after summing the filtered detail rows.",
+    },
+    {
+      title: "Spreading EFF %",
+      description: "Average of spreader-level EFF % values within the selected context.",
+    },
+    {
+      title: "Utilization %",
+      description: "Average of machine-level utilization values within the selected context.",
+    },
+    {
+      title: "Hourly Target",
+      description: "Editable target used in all efficiency and utilization calculations, default 450 yard/h.",
+    },
+    {
+      title: "Machine Utilization chart",
+      description: "Shows Total Spread Time (minutes), Total Spread (Y), Output completion, and machine utilization by spreading table.",
+    },
+    {
+      title: "Spreader Efficiency chart",
+      description: "Shows Total Yards (Spread) and EFF % by spreader.",
+    },
+    {
+      title: "Lacking yardage status chart",
+      description: "Roll variance chart; values outside +/-1 yard are shown, positive is green, negative is red.",
+    },
   ],
-  detailColumns: [
-    "Factory",
-    "CutRef",
-    "Spreading Status",
-    "Spreading Ref",
-    "Cut Cell",
-    "Cut#",
-    "Sub CutNo",
-    "Marker Name",
-    "Marker No.",
-    "Marker Length (Yard)",
-    "Fabric Combo",
-    "Article",
-    "Color",
-    "Size",
-    "Layers",
-    "Total Cons. (Yard)",
-    "Spreading Table",
-    "Seq",
-    "Roll",
-    "Dyelot",
-    "Fabric Tone",
-    "Ticket /Remain Yards",
-    "Layer Spread",
-    "Total Yards (Spread)",
-    "Merge Fabric (Yard)",
-    "Use Cutends (Yard)",
-    "Damage (Yard)",
-    "Remain Yards",
-    "Ori Cutends (Yard)",
-    "Variance (Yard)",
-    "Start Time",
-    "End Time",
-    "Spreading Time (Sec)",
-  ],
-  dataSheetColumns: ["Spreading Table", "ID Number", "Name", "COL4"],
   formulas: [
     {
       title: "Actual Working Hours",
@@ -274,16 +257,18 @@ function renderHelpDialog() {
       </table>
     </section>
     <section class="help-section">
-      <h3>Summary Sheet Columns</h3>
-      ${list(helpSpec.summaryColumns)}
-    </section>
-    <section class="help-section">
-      <h3>Detail Sheet Columns</h3>
-      ${list(helpSpec.detailColumns)}
-    </section>
-    <section class="help-section">
-      <h3>Table Sheet Columns</h3>
-      ${list(helpSpec.dataSheetColumns)}
+      <h3>Dashboard Terms</h3>
+      <div class="help-cards help-terms">
+        ${helpSpec.terms
+          .map(
+            (item) => `
+              <article class="help-card">
+                <h3>${escapeHtml(item.title)}</h3>
+                <p>${escapeHtml(item.description)}</p>
+              </article>`,
+          )
+          .join("")}
+      </div>
     </section>
     <section class="help-section help-formulas">
       <h3>Calculation Rules</h3>

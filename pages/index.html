@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Digital Spreading Dashboard</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main id="dashboardApp" class="app">
+      <header class="title-bar">
+        <div>
+          <h1>Digital Spreading Monitoring</h1>
+        </div>
+      </header>
+
+      <section class="control-band">
+        <div class="control-group date-group">
+          <span class="control-label">Spreading Date</span>
+          <div class="control-row">
+            <input id="startDate" type="date" />
+            <input id="endDate" type="date" />
+          </div>
+        </div>
+        <div class="control-group table-group">
+          <span class="control-label">Spreading Table</span>
+          <div id="tableButtons" class="segmented"></div>
+        </div>
+        <div class="control-group">
+          <span class="control-label">Spreading Status</span>
+          <select id="statusSelect"></select>
+        </div>
+        <div class="control-group target-group">
+          <span class="control-label">Hourly Target</span>
+          <div class="target-input">
+            <input id="hourlyTarget" type="number" min="1" step="1" value="450" />
+            <span>yard/h</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="kpiGrid" class="kpi-grid"></section>
+
+      <section class="charts-grid">
+        <article class="panel chart-panel">
+          <div class="panel-heading">
+            <h2>Spreader Efficiency</h2>
+            <span>Total Yards + EFF %</span>
+          </div>
+          <div id="spreaderChart" class="chart"></div>
+        </article>
+        <article class="panel chart-panel">
+          <div class="panel-heading">
+            <h2>Machine Utilization</h2>
+            <span>Time, output, completion, utilization</span>
+          </div>
+          <div id="machineChart" class="chart"></div>
+        </article>
+      </section>
+
+      <section class="bottom-grid">
+        <article class="panel">
+          <div class="panel-heading">
+            <h2>Lacking yardage status</h2>
+            <span>Roll variance outside +/-1 yard</span>
+          </div>
+          <div id="varianceChart" class="chart short-chart"></div>
+        </article>
+        <article class="panel table-panel">
+          <div class="panel-heading detail-heading">
+            <span id="rowCount"></span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="sortable" data-sort-key="cutRef">CutRef</th>
+                  <th class="sortable" data-sort-key="roll">Roll</th>
+                  <th class="sortable" data-sort-key="spreadingTable">Table</th>
+                  <th class="sortable" data-sort-key="spreader">SP#</th>
+                  <th class="sortable" data-sort-key="spreaderName">Spreader</th>
+                  <th class="sortable" data-sort-key="totalYardsSpread">Total Yards (YARD)</th>
+                  <th class="sortable" data-sort-key="damageYard">Damage (YARD)</th>
+                  <th class="sortable" data-sort-key="varianceYard">Variance (YARD)</th>
+                  <th class="sortable" data-sort-key="effPct">EFF %</th>
+                  <th class="sortable" data-sort-key="startTime">Start</th>
+                  <th class="sortable" data-sort-key="endTime">End</th>
+                  <th class="sortable" data-sort-key="spreadingTimeHours">Time</th>
+                  <th class="sortable" data-sort-key="status">Status</th>
+                </tr>
+              </thead>
+              <tbody id="detailBody"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <footer class="app-footer">
+        <span id="generatedAt"></span>
+        <span>Actual work time: 7.5h base, overtime after 16:30 rounded up by 30m.</span>
+      </footer>
+    </main>
+
+    <script src="./data/dashboard-data.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

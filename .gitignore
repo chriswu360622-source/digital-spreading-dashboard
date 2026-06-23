@@ -1,0 +1,12 @@
+node_modules/
+assets/screen-github-auth.png
+assets/device-activation-capture.png
+assets/device-activation-screen.png
+assets/live-access.txt
+assets/start.err
+assets/start.log
+assets/verify-result.json
+pages-preview.png
+preview.png
+__pycache__/
+*.pyc

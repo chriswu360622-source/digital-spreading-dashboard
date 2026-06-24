@@ -624,7 +624,7 @@ function renderComboChart(node, data, config) {
               const labelY = Math.max(pad.top + 11, Math.min(pad.top + plotH - 6, y + labelDy));
               return `<g class="chart-item ${selectionClass(config.filterType, filterKey)}" data-clickable="true" data-filter-type="${config.filterType}" data-filter-key="${filterKey}">
                 <circle cx="${x}" cy="${y}" r="5" fill="${line.color}" />
-                <text class="chart-value chart-line-value" x="${x + labelDx}" y="${labelY}" text-anchor="middle" font-size="${valueFontSize}" font-weight="${valueWeight}" fill="${valueColor}">${fmt.pct(d[line.key])}</text>
+                <text class="chart-value chart-line-value" x="${x + labelDx}" y="${labelY}" text-anchor="middle" font-size="${valueFontSize}" font-weight="${valueWeight}" fill="${line.color}">${fmt.pct(d[line.key])}</text>
               </g>`;
             })
             .join("")}`)

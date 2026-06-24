@@ -526,8 +526,8 @@ function renderComboChart(node, data, config) {
     left: config.pad?.left ?? 50,
   };
   const xLabelY = config.xLabelY ?? height - 12;
-  const labelFontSize = config.labelFontSize ?? 7;
-  const valueFontSize = config.valueFontSize ?? 6;
+  const labelFontSize = config.labelFontSize ?? 8;
+  const valueFontSize = config.valueFontSize ?? 8;
   const plotW = width - pad.left - pad.right;
   const plotH = height - pad.top - pad.bottom;
   const barMax = Math.max(...data.flatMap((d) => config.bars.map((bar) => d[bar.key])), 1);
@@ -564,10 +564,10 @@ function renderComboChart(node, data, config) {
               const h = (d[bar.key] / barMax) * plotH;
               const x = start + j * barW;
               const y = pad.top + plotH - h;
-              const labelY = Math.max(pad.top + 12, y - 14);
-              const labelDx = config.barLabelDx?.[j] ?? (config.bars.length > 1 ? (j === 0 ? -9 : 9) : 0);
+              const labelY = Math.max(pad.top + 12, y - 16);
+              const labelDx = config.barLabelDx?.[j] ?? (config.bars.length > 1 ? (j === 0 ? -10 : 10) : 0);
               return `<rect x="${x}" y="${y}" width="${barW - 2}" height="${h}" fill="${bar.color}" />
-                <text class="chart-value chart-bar-value" x="${x + barW / 2}" y="${labelY}" dx="${labelDx}" text-anchor="middle" font-size="${valueFontSize}" font-weight="400">${bar.format(d[bar.key])}</text>`;
+                <text class="chart-value chart-bar-value" x="${x + barW / 2}" y="${labelY}" dx="${labelDx}" text-anchor="middle" font-size="${valueFontSize}" font-weight="500">${bar.format(d[bar.key])}</text>`;
             })
             .join("")}
           </g>`;
@@ -580,12 +580,12 @@ function renderComboChart(node, data, config) {
               const x = pad.left + i * groupW + groupW / 2;
               const y = pad.top + plotH - (d[line.key] / pctMax) * plotH;
               const filterKey = config.filterKey ? config.filterKey(d) : d.label;
-              const labelDy = line.labelDy ?? (line.key === "utilization" ? 38 : -28);
+              const labelDy = line.labelDy ?? (line.key === "utilization" ? 42 : -30);
               const labelDx = line.labelDx ?? 0;
               const labelY = Math.max(pad.top + 11, Math.min(pad.top + plotH - 6, y + labelDy));
               return `<g class="chart-item ${selectionClass(config.filterType, filterKey)}" data-clickable="true" data-filter-type="${config.filterType}" data-filter-key="${filterKey}">
                 <circle cx="${x}" cy="${y}" r="5" fill="${line.color}" />
-                <text class="chart-value chart-line-value" x="${x + labelDx}" y="${labelY}" text-anchor="middle" font-size="${valueFontSize}" font-weight="400" fill="${line.color}">${fmt.pct(d[line.key])}</text>
+                <text class="chart-value chart-line-value" x="${x + labelDx}" y="${labelY}" text-anchor="middle" font-size="${valueFontSize}" font-weight="500" fill="${line.color}">${fmt.pct(d[line.key])}</text>
               </g>`;
             })
             .join("")}`)
@@ -714,7 +714,7 @@ function render() {
     filterType: "spreader",
     leftAxis: "Yards",
     bars: [{ key: "yards", label: "Total Yards (Spread)", color: "var(--blue)", format: (v) => fmt.number(v, 0) }],
-    lines: [{ key: "pct", label: "EFF %", color: "var(--red)", labelDy: -18 }],
+    lines: [{ key: "pct", label: "EFF %", color: "var(--red)", labelDy: -20 }],
   });
   renderComboChart(el.machineChart, aggregateMachine(values.machine), {
     filterType: "spreadingTable",
@@ -725,8 +725,8 @@ function render() {
       { key: "yards", label: "Total Spread (Y)", color: "var(--blue)", format: (v) => fmt.number(v, 0) },
     ],
     lines: [
-      { key: "completion", label: "Output completion", color: "var(--orange)", labelDy: -34, labelDx: -10 },
-      { key: "utilization", label: "machine utilization", color: "var(--purple)", labelDy: 40, labelDx: 10 },
+      { key: "completion", label: "Output completion", color: "var(--orange)", labelDy: -38, labelDx: -12 },
+      { key: "utilization", label: "machine utilization", color: "var(--purple)", labelDy: 44, labelDx: 12 },
     ],
   });
   renderVarianceChart(detail);

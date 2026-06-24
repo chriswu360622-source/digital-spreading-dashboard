@@ -518,16 +518,16 @@ function selectionClass(type, key) {
 
 function renderComboChart(node, data, config) {
   const width = 760;
-  const height = config.height ?? 272;
+  const height = config.height ?? 252;
   const pad = {
     top: config.pad?.top ?? 38,
     right: config.pad?.right ?? 42,
     bottom: config.pad?.bottom ?? 58,
     left: config.pad?.left ?? 50,
   };
-  const xLabelY = config.xLabelY ?? height - 6;
-  const labelFontSize = config.labelFontSize ?? 10;
-  const valueFontSize = config.valueFontSize ?? 8;
+  const xLabelY = config.xLabelY ?? height - 9;
+  const labelFontSize = config.labelFontSize ?? 9;
+  const valueFontSize = config.valueFontSize ?? 7;
   const plotW = width - pad.left - pad.right;
   const plotH = height - pad.top - pad.bottom;
   const barMax = Math.max(...data.flatMap((d) => config.bars.map((bar) => d[bar.key])), 1);
@@ -567,7 +567,7 @@ function renderComboChart(node, data, config) {
               const labelY = Math.max(pad.top + 12, y - 16);
               const labelDx = config.barLabelDx?.[j] ?? (config.bars.length > 1 ? (j === 0 ? -10 : 10) : 0);
               return `<rect x="${x}" y="${y}" width="${barW - 2}" height="${h}" fill="${bar.color}" />
-                <text class="chart-value chart-bar-value" x="${x + barW / 2}" y="${labelY}" dx="${labelDx}" text-anchor="middle" font-size="${valueFontSize}" font-weight="500">${bar.format(d[bar.key])}</text>`;
+                <text class="chart-value chart-bar-value" x="${x + barW / 2}" y="${labelY}" dx="${labelDx}" text-anchor="middle" font-size="${valueFontSize}" font-weight="350">${bar.format(d[bar.key])}</text>`;
             })
             .join("")}
           </g>`;
@@ -585,13 +585,13 @@ function renderComboChart(node, data, config) {
               const labelY = Math.max(pad.top + 11, Math.min(pad.top + plotH - 6, y + labelDy));
               return `<g class="chart-item ${selectionClass(config.filterType, filterKey)}" data-clickable="true" data-filter-type="${config.filterType}" data-filter-key="${filterKey}">
                 <circle cx="${x}" cy="${y}" r="5" fill="${line.color}" />
-                <text class="chart-value chart-line-value" x="${x + labelDx}" y="${labelY}" text-anchor="middle" font-size="${valueFontSize}" font-weight="500" fill="${line.color}">${fmt.pct(d[line.key])}</text>
+                <text class="chart-value chart-line-value" x="${x + labelDx}" y="${labelY}" text-anchor="middle" font-size="${valueFontSize}" font-weight="350" fill="${line.color}">${fmt.pct(d[line.key])}</text>
               </g>`;
             })
             .join("")}`)
         .join("")}
       ${data
-        .map((d, i) => `<text class="chart-label" x="${pad.left + i * groupW + groupW / 2}" y="${xLabelY}" text-anchor="middle" font-size="${labelFontSize}" font-weight="600">${d.label}</text>`)
+        .map((d, i) => `<text class="chart-label" x="${pad.left + i * groupW + groupW / 2}" y="${xLabelY}" text-anchor="middle" font-size="${labelFontSize}" font-weight="500">${d.label}</text>`)
         .join("")}
     </svg>`;
   node.querySelectorAll("[data-clickable='true']").forEach((item) => {
@@ -606,8 +606,8 @@ function renderVarianceChart(detail) {
     .sort((a, b) => b.value - a.value);
   const width = Math.max(680, data.length * 20 + 80);
   const tallestLabelRows = Math.max(1, Math.ceil(data.length / 12));
-  const height = Math.max(220, 182 + tallestLabelRows * 6);
-  const pad = { top: 12, right: 18, bottom: 56, left: 42 };
+  const height = Math.max(184, 150 + tallestLabelRows * 4);
+  const pad = { top: 10, right: 18, bottom: 50, left: 42 };
   const plotW = width - pad.left - pad.right;
   const plotH = height - pad.top - pad.bottom;
   const max = Math.max(...data.map((d) => Math.abs(d.value)), 10);

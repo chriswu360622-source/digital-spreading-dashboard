@@ -270,14 +270,14 @@ select {
 }
 
 .panel-heading {
-  min-height: 26px;
+  min-height: 24px;
   background: var(--steel);
   color: #0f1720;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 3px 8px;
+  padding: 2px 8px;
 }
 
 .panel-heading h2 {
@@ -293,14 +293,14 @@ select {
 }
 
 .chart {
-  height: 208px;
-  padding: 8px 8px 6px;
+  height: 202px;
+  padding: 6px 8px 4px;
   overflow: hidden;
 }
 
 .short-chart {
   height: auto;
-  min-height: 226px;
+  min-height: 184px;
   overflow-x: auto;
   overflow-y: hidden;
 }
@@ -312,19 +312,19 @@ select {
 }
 
 .chart svg text.chart-value {
-  fill: #223040;
+  fill: #243444;
 }
 
 .chart svg text.chart-bar-value {
-  fill: #223040;
+  fill: #243444;
 }
 
 .chart svg text.chart-line-value {
-  fill: #223040;
+  fill: #243444;
 }
 
 .chart svg text.chart-label {
-  fill: #324152;
+  fill: #304050;
 }
 
 .chart [data-clickable="true"] {
@@ -354,11 +354,11 @@ select {
 
 .legend {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
   flex-wrap: wrap;
-  margin: 0 0 6px 2px;
-  font-size: 10px;
+  margin: 0 0 4px 1px;
+  font-size: 9px;
   color: var(--muted);
 }
 
@@ -371,7 +371,7 @@ select {
 }
 
 .table-panel {
-  min-height: 260px;
+  min-height: 232px;
 }
 
 .detail-heading {
@@ -379,7 +379,7 @@ select {
 }
 
 .table-wrap {
-  height: 204px;
+  height: 178px;
   overflow: auto;
 }
 

@@ -34,6 +34,12 @@ Top-to-bottom layout:
    - Left: `Spreading Variance (Y)`.
    - Right: roll/detail table.
 
+Layout tuning note:
+
+- Keep the bottom variance area compact enough that the top two charts remain fully readable on a single screen.
+- Use a lighter, simpler type treatment for the top charts so bar labels, line labels, and axis labels stay legible without visual heaviness.
+- Preserve `Spreader` and `Table` labels in chart labels and detail fields; do not hide those identifiers to save space.
+
 ## Required Data Model
 
 Minimum frontend/backend data model:

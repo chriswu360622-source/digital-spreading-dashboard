@@ -753,7 +753,7 @@ function render() {
     filterType: "spreader",
     leftAxis: "Yards",
     bars: [{ key: "yards", label: "Total Yards (Spread)", color: "var(--blue)", format: (v) => fmt.number(v, 0) }],
-    lines: [{ key: "pct", label: "EFF %", color: "var(--red)", labelDy: -20 }],
+    lines: [{ key: "pct", label: "EFF %", color: "var(--red)", labelDy: -28, labelDx: 14 }],
   });
   renderComboChart(el.machineChart, aggregateMachine(values.machine), {
     filterType: "spreadingTable",
@@ -764,8 +764,8 @@ function render() {
       { key: "yards", label: "Total Spread (Y)", color: "var(--blue)", format: (v) => fmt.number(v, 0) },
     ],
     lines: [
-      { key: "completion", label: "Output completion", color: "var(--orange)", labelDy: -38, labelDx: -12 },
-      { key: "utilization", label: "machine utilization", color: "var(--purple)", labelDy: 44, labelDx: 12 },
+      { key: "completion", label: "Output completion", color: "var(--orange)", labelDy: -44, labelDx: -16 },
+      { key: "utilization", label: "machine utilization", color: "var(--purple)", labelDy: 50, labelDx: 16 },
     ],
   });
   renderVarianceChart(detail);

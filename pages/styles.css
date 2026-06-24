@@ -321,6 +321,10 @@ select {
 
 .chart svg text.chart-line-value {
   fill: #182736;
+  paint-order: stroke fill;
+  stroke: rgba(255, 255, 255, 0.92);
+  stroke-width: 3px;
+  stroke-linejoin: round;
 }
 
 .chart svg text.chart-label {

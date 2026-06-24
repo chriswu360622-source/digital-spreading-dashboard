@@ -315,12 +315,13 @@ select {
 .chart svg text.chart-label {
   paint-order: stroke fill;
   stroke-linejoin: round;
+  text-rendering: geometricPrecision;
 }
 
 .chart svg text.chart-value {
   fill: #223040;
   stroke: #ffffff;
-  stroke-width: 1.75px;
+  stroke-width: 1px;
 }
 
 .chart svg text.chart-bar-value {
@@ -328,13 +329,13 @@ select {
 }
 
 .chart svg text.chart-line-value {
-  stroke-width: 2px;
+  stroke-width: 1.15px;
 }
 
 .chart svg text.chart-label {
   fill: #566474;
   stroke: #ffffff;
-  stroke-width: 1.5px;
+  stroke-width: 0.9px;
 }
 
 .chart [data-clickable="true"] {

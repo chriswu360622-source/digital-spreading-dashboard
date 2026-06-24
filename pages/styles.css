@@ -312,19 +312,19 @@ select {
 }
 
 .chart svg text.chart-value {
-  fill: #243444;
+  fill: #182736;
 }
 
 .chart svg text.chart-bar-value {
-  fill: #243444;
+  fill: #182736;
 }
 
 .chart svg text.chart-line-value {
-  fill: #243444;
+  fill: #182736;
 }
 
 .chart svg text.chart-label {
-  fill: #304050;
+  fill: #243444;
 }
 
 .chart [data-clickable="true"] {

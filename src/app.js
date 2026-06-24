@@ -51,6 +51,41 @@ const fmt = {
   },
 };
 
+const visualVariant = new URLSearchParams(window.location.search).get("look") || "balanced";
+const chartStylePresets = {
+  clean: {
+    valueFontSize: 7,
+    labelFontSize: 8,
+    valueWeight: 500,
+    labelWeight: 500,
+    valueColor: "#223344",
+    labelColor: "#344556",
+    barLabelDx: [-10, 10],
+    lineLabelDy: { completion: -34, utilization: 46 },
+  },
+  balanced: {
+    valueFontSize: 8,
+    labelFontSize: 9,
+    valueWeight: 600,
+    labelWeight: 500,
+    valueColor: "#172433",
+    labelColor: "#2f4051",
+    barLabelDx: [-12, 12],
+    lineLabelDy: { completion: -38, utilization: 48 },
+  },
+  bold: {
+    valueFontSize: 9,
+    labelFontSize: 9,
+    valueWeight: 700,
+    labelWeight: 600,
+    valueColor: "#101d2a",
+    labelColor: "#233444",
+    barLabelDx: [-14, 14],
+    lineLabelDy: { completion: -42, utilization: 52 },
+  },
+};
+const chartStyle = chartStylePresets[visualVariant] || chartStylePresets.balanced;
+
 const el = {
   dashboardApp: document.querySelector("#dashboardApp"),
   helpButton: document.querySelector("#helpButton"),
@@ -526,8 +561,12 @@ function renderComboChart(node, data, config) {
     left: config.pad?.left ?? 50,
   };
   const xLabelY = config.xLabelY ?? height - 9;
-  const labelFontSize = config.labelFontSize ?? 9;
-  const valueFontSize = config.valueFontSize ?? 7;
+  const labelFontSize = config.labelFontSize ?? chartStyle.labelFontSize;
+  const valueFontSize = config.valueFontSize ?? chartStyle.valueFontSize;
+  const labelWeight = config.labelWeight ?? chartStyle.labelWeight;
+  const valueWeight = config.valueWeight ?? chartStyle.valueWeight;
+  const valueColor = config.valueColor ?? chartStyle.valueColor;
+  const labelColor = config.labelColor ?? chartStyle.labelColor;
   const plotW = width - pad.left - pad.right;
   const plotH = height - pad.top - pad.bottom;
   const barMax = Math.max(...data.flatMap((d) => config.bars.map((bar) => d[bar.key])), 1);
@@ -565,9 +604,9 @@ function renderComboChart(node, data, config) {
               const x = start + j * barW;
               const y = pad.top + plotH - h;
               const labelY = Math.max(pad.top + 12, y - 16);
-              const labelDx = config.barLabelDx?.[j] ?? (config.bars.length > 1 ? (j === 0 ? -10 : 10) : 0);
+              const labelDx = config.barLabelDx?.[j] ?? chartStyle.barLabelDx?.[j] ?? (config.bars.length > 1 ? (j === 0 ? -10 : 10) : 0);
               return `<rect x="${x}" y="${y}" width="${barW - 2}" height="${h}" fill="${bar.color}" />
-                <text class="chart-value chart-bar-value" x="${x + barW / 2}" y="${labelY}" dx="${labelDx}" text-anchor="middle" font-size="${valueFontSize}" font-weight="350">${bar.format(d[bar.key])}</text>`;
+                <text class="chart-value chart-bar-value" x="${x + barW / 2}" y="${labelY}" dx="${labelDx}" text-anchor="middle" font-size="${valueFontSize}" font-weight="${valueWeight}" fill="${valueColor}">${bar.format(d[bar.key])}</text>`;
             })
             .join("")}
           </g>`;
@@ -580,18 +619,18 @@ function renderComboChart(node, data, config) {
               const x = pad.left + i * groupW + groupW / 2;
               const y = pad.top + plotH - (d[line.key] / pctMax) * plotH;
               const filterKey = config.filterKey ? config.filterKey(d) : d.label;
-              const labelDy = line.labelDy ?? (line.key === "utilization" ? 42 : -30);
+              const labelDy = line.labelDy ?? chartStyle.lineLabelDy?.[line.key] ?? (line.key === "utilization" ? 42 : -30);
               const labelDx = line.labelDx ?? 0;
               const labelY = Math.max(pad.top + 11, Math.min(pad.top + plotH - 6, y + labelDy));
               return `<g class="chart-item ${selectionClass(config.filterType, filterKey)}" data-clickable="true" data-filter-type="${config.filterType}" data-filter-key="${filterKey}">
                 <circle cx="${x}" cy="${y}" r="5" fill="${line.color}" />
-                <text class="chart-value chart-line-value" x="${x + labelDx}" y="${labelY}" text-anchor="middle" font-size="${valueFontSize}" font-weight="350" fill="${line.color}">${fmt.pct(d[line.key])}</text>
+                <text class="chart-value chart-line-value" x="${x + labelDx}" y="${labelY}" text-anchor="middle" font-size="${valueFontSize}" font-weight="${valueWeight}" fill="${valueColor}">${fmt.pct(d[line.key])}</text>
               </g>`;
             })
             .join("")}`)
         .join("")}
       ${data
-        .map((d, i) => `<text class="chart-label" x="${pad.left + i * groupW + groupW / 2}" y="${xLabelY}" text-anchor="middle" font-size="${labelFontSize}" font-weight="500">${d.label}</text>`)
+        .map((d, i) => `<text class="chart-label" x="${pad.left + i * groupW + groupW / 2}" y="${xLabelY}" text-anchor="middle" font-size="${labelFontSize}" font-weight="${labelWeight}" fill="${labelColor}">${d.label}</text>`)
         .join("")}
     </svg>`;
   node.querySelectorAll("[data-clickable='true']").forEach((item) => {

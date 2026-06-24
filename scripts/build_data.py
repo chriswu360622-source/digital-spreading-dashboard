@@ -197,12 +197,16 @@ def build() -> None:
     for row in summary_rows:
         spreading_date = normalize_date(row.get("Spreading Date"))
         cutref = text(row.get("CutRef"))
+        start_time = normalize_datetime(row.get("Start Time"), spreading_date)
+        end_time = normalize_datetime(row.get("End Time"), spreading_date)
+        activity_date = (start_time or spreading_date or "")[:10] or spreading_date
         item = {
             "factory": text(row.get("Factory")),
             "cutRef": cutref,
             "status": text(row.get("Spreading Status")),
             "spreadingRef": text(row.get("Spreading Ref")),
             "spreadingDate": spreading_date,
+            "activityDate": activity_date,
             "cutCell": text(row.get("Cut Cell")),
             "cutNo": text(row.get("Cut#")),
             "markerName": text(row.get("Marker Name")),
@@ -220,8 +224,8 @@ def build() -> None:
             "balYards": number(row.get("Bal. Yards")),
             "remarkSpreading": text(row.get("Remark (Spreading)")),
             "spreader": text(row.get("Spreader")),
-            "startTime": normalize_datetime(row.get("Start Time"), spreading_date),
-            "endTime": normalize_datetime(row.get("End Time"), spreading_date),
+            "startTime": start_time,
+            "endTime": end_time,
             "spreadingTimeHours": elapsed_hours(row.get("Start Time"), row.get("End Time"), spreading_date),
             "spreadingTimeSeconds": elapsed_hours(row.get("Start Time"), row.get("End Time"), spreading_date) * 3600,
             "spreaderName": text(row.get("Spreader Name")),
@@ -234,12 +238,16 @@ def build() -> None:
         cutref = text(row.get("CutRef"))
         parent = summary_by_cutref.get(cutref, {})
         spreading_date = parent.get("spreadingDate")
+        start_time = normalize_datetime(row.get("Start Time"), spreading_date)
+        end_time = normalize_datetime(row.get("End Time"), spreading_date)
+        activity_date = (start_time or spreading_date or "")[:10] or spreading_date
         item = {
             "factory": text(row.get("Factory")),
             "cutRef": cutref,
             "status": text(row.get("Spreading Status")),
             "summaryStatus": parent.get("status", text(row.get("Spreading Status"))),
             "summaryDate": spreading_date,
+            "activityDate": activity_date,
             "spreadingRef": text(row.get("Spreading Ref")),
             "cutCell": text(row.get("Cut Cell")),
             "cutNo": text(row.get("Cut#")),
@@ -267,8 +275,8 @@ def build() -> None:
             "remainYards": number(row.get("Remain Yards")),
             "oriCutendsYard": number(row.get("Ori Cutends (Yard)")),
             "varianceYard": number(row.get("Variance (Yard)")),
-            "startTime": normalize_datetime(row.get("Start Time"), spreading_date),
-            "endTime": normalize_datetime(row.get("End Time"), spreading_date),
+            "startTime": start_time,
+            "endTime": end_time,
             "spreadingTimeHours": elapsed_hours(row.get("Start Time"), row.get("End Time"), spreading_date),
             "spreader": parent.get("spreader", ""),
             "spreaderName": parent.get("spreaderName", ""),

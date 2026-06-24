@@ -116,17 +116,18 @@ spreading_efficiency = average(EFF % by spreader/date group in selected context)
 - Owning table: `Detail`
 - Original DAX/calculated column: missing; Layout uses `Sum(Detail.spreading time)` displayed as `Total Spread Time (minutes)`.
 - Business meaning: total spreading time in minutes per machine/table.
-- Dependencies: `Detail.Spreading Time (hh:mm)` or `Detail.End Time - Detail.Start Time`.
-- Filter context assumptions: selected Summary date/status context.
+- Dependencies: `Detail.Start Time`, `Detail.End Time`, and interval merge logic by `Start Time` date.
+- Filter context assumptions: selected activity date/status/table context.
 - Format string: numeric minutes.
 - Formula:
 
 ```text
-spreading_time = End Time - Start Time
-machine_actual_running_time = sum(spreading_time)
+spreading_time = merge overlapping Start Time / End Time intervals within the same Start Time date and Spreading Table
+machine_actual_running_time = merged running intervals within the same Start Time date and Spreading Table, minus the 12:00-13:00 lunch break overlap
 ```
 
-- Dashboard implementation note: calculate in minutes/hours consistently; use hours for utilization denominator.
+- Dashboard implementation note: calculate in minutes/hours consistently; use hours for utilization denominator. Do not group by Excel `Spreading Date` when it differs from `Start Time`.
+- Dashboard implementation note: subtract only the lunch-break overlap, not the whole noon block.
 - Validation source: Excel formulas and user-confirmed business rule.
 - Status: `READY` for new Dashboard logic.
 
@@ -136,7 +137,7 @@ machine_actual_running_time = sum(spreading_time)
 - Original DAX/calculated column: not used as final authority. User confirmed the Dashboard must use true actual-working-time logic.
 - Business meaning: machine/table utilization percentage line in Machine Utilization chart.
 - Dependencies: machine actual running time, machine/table/date latest marker `End Time`, and actual working hours.
-- Filter context assumptions: grouped by `Detail.Spreading Table` and date.
+- Filter context assumptions: grouped by `Detail.Spreading Table` and activity date derived from `Start Time`.
 - Format string: percent.
 - Formula:
 
@@ -145,7 +146,7 @@ actual_working_hours_by_machine_date =
   7.5 if latest marker End Time <= 16:30
   else 7.5 + ceil((latest marker End Time - 16:30) / 30 minutes) * 0.5
 
-machine_actual_running_time = sum(spreading_time)
+machine_actual_running_time = merged running time from Start/End intervals by Start Time date
 
 machine_utilization = machine_actual_running_time / actual_working_hours_by_machine_date
 ```
@@ -161,7 +162,7 @@ machine_utilization = machine_actual_running_time / actual_working_hours_by_mach
 - Original DAX/calculated column: missing; Layout projection `Sum(Detail.Sum Utilization)` maps to expression over `Detail.Average Utilization`, but user confirmed new Dashboard rule should use average machine utilization.
 - Business meaning: selected-range average of machine-level utilization values.
 - Dependencies: machine/date `machine_utilization` records.
-- Filter context assumptions: selected date/status/table context.
+- Filter context assumptions: selected activity date/status/table context.
 - Format string: percent `0.00%;-0.00%;0.00%`.
 - Formula:
 
@@ -178,7 +179,7 @@ utilization = average(machine_utilization by spreading_table/date group in selec
 Core ready metrics:
 
 ```text
-Filtered Summary = Summary rows filtered by Spreading Date, Spreading Status, Spreading Table
+Filtered Summary = Summary rows filtered by Start Time date, Spreading Status, Spreading Table
 Filtered Detail  = Detail rows whose CutRef is in Filtered Summary.CutRef
 
 Count of CutRef       = distinct_count(Filtered Summary.CutRef)

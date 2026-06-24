@@ -25,6 +25,7 @@ Actual working hours must be calculated per selected day and per entity:
 
 - For spreader-level efficiency, calculate actual working hours per `Spreader` per date.
 - For machine-level efficiency/utilization, calculate actual working hours per `Spreading Table` per date.
+- Use the `Start Time` date as the grouping date for all spreader/table calculations.
 - Use the latest marker `End Time` in that date/entity group to determine whether overtime applies.
 
 ## Actual Working Hours Formula
@@ -121,11 +122,14 @@ Default assumption: simple/unweighted average. If output-weighted averaging is r
 ## Machine Actual Running Time
 
 ```text
-machine_actual_running_time = sum(spreading time)
-spreading_time = End Time - Start Time
+activity_date = Start Time date
+spreading_time = merge overlapping Start Time / End Time intervals within the same activity_date and Spreading Table
+machine_actual_running_time = merged running intervals within the same activity_date and Spreading Table, minus the 12:00-13:00 lunch break overlap
 ```
 
 Use consistent units, preferably hours for utilization calculations and minutes for chart labels.
+Do not group machine utilization by the Excel `Spreading Date` field when the `Start Time` date is different.
+If a running interval crosses the lunch break, subtract only the 12:00-13:00 overlap.
 
 ## Machine Utilization
 
@@ -165,4 +169,3 @@ Default assumption: simple/unweighted average across selected machine/date utili
 ## PBI Versus Dashboard Rule
 
 The current PBI used a simplified fixed-time formula that is difficult to maintain and does not calculate true work time accurately. The new Dashboard must use the actual working-time logic above for efficiency and utilization.
-

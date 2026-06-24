@@ -75,11 +75,12 @@ Spreading Table
 Relationship logic for implementation:
 
 ```text
-filtered_summary = Summary filtered by date, status, table
+filtered_summary = Summary filtered by Start Time date, status, table
 filtered_detail = Detail where CutRef in filtered_summary.CutRef
 ```
 
 Use this explicit filter propagation even if the implementation is not Power BI.
+If `Spreading Date` differs from the `Start Time` date, the `Start Time` date wins for dashboard grouping and filtering.
 
 ## Metric Layer Implementation Order
 
@@ -168,11 +169,11 @@ Target output at 450 yard/hour = 8.5 * 450 = 3825 yards
 - Visual type: combo chart.
 - Category: `Detail.Spreading Table`.
 - Columns:
-  - `sum(Detail.spreading time)` as `Total Spread Time (minutes)`.
+  - merged `Detail.Start Time` / `Detail.End Time` intervals grouped by `Start Time` date and `Spreading Table`, minus the 12:00-13:00 lunch break overlap, as `Total Spread Time (minutes)`.
   - `sum(Detail.Total Yards (Spread))` as `Total Spread (Y)`.
 - Lines:
   - `machine_efficiency = total_yards_spread_by_spreading_table / target_output_by_spreading_table` as `Output completion`.
-  - `machine_utilization = machine_actual_running_time / actual_working_time` as `machine utilization`.
+  - `machine_utilization = merged_running_time / actual_working_time` as `machine utilization`.
 - Sort: spreading time descending.
 - Status: use user-confirmed Dashboard formulas, not the old simplified PBI fixed-time shortcut.
 
@@ -216,7 +217,7 @@ Conditional formatting:
 
 Global controls:
 
-- Date range from `Summary.Spreading Date`.
+- Date range from `Start Time` date.
 - Spreading table from `Spreading Table.Spreading Table`.
 - Spreading status from `Summary.Spreading Status`.
 

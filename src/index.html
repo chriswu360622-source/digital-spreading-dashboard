@@ -116,7 +116,16 @@
       </div>
     </dialog>
 
-    <script src="../data/dashboard-data.js"></script>
-    <script src="./app.js"></script>
+    <script>
+      (() => {
+        const loadScript = (src, onload) => {
+          const script = document.createElement("script");
+          script.src = `${src}?ts=${Date.now()}`;
+          if (onload) script.onload = onload;
+          document.body.appendChild(script);
+        };
+        loadScript("../data/dashboard-data.js", () => loadScript("./app.js"));
+      })();
+    </script>
   </body>
 </html>

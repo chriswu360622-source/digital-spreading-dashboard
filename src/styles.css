@@ -321,7 +321,7 @@ select {
 .chart svg text.chart-value {
   fill: #223040;
   stroke: #ffffff;
-  stroke-width: 1px;
+  stroke-width: 0.7px;
 }
 
 .chart svg text.chart-bar-value {
@@ -329,13 +329,13 @@ select {
 }
 
 .chart svg text.chart-line-value {
-  stroke-width: 1.15px;
+  stroke-width: 0.85px;
 }
 
 .chart svg text.chart-label {
   fill: #566474;
   stroke: #ffffff;
-  stroke-width: 0.9px;
+  stroke-width: 0.6px;
 }
 
 .chart [data-clickable="true"] {

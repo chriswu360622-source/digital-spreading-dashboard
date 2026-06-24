@@ -525,8 +525,8 @@ function renderComboChart(node, data, config) {
     bottom: config.pad?.bottom ?? 58,
     left: config.pad?.left ?? 50,
   };
-  const xLabelY = config.xLabelY ?? height - 12;
-  const labelFontSize = config.labelFontSize ?? 8;
+  const xLabelY = config.xLabelY ?? height - 6;
+  const labelFontSize = config.labelFontSize ?? 10;
   const valueFontSize = config.valueFontSize ?? 8;
   const plotW = width - pad.left - pad.right;
   const plotH = height - pad.top - pad.bottom;
@@ -591,7 +591,7 @@ function renderComboChart(node, data, config) {
             .join("")}`)
         .join("")}
       ${data
-        .map((d, i) => `<text class="chart-label" x="${pad.left + i * groupW + groupW / 2}" y="${xLabelY}" text-anchor="middle" font-size="${labelFontSize}" font-weight="500">${d.label}</text>`)
+        .map((d, i) => `<text class="chart-label" x="${pad.left + i * groupW + groupW / 2}" y="${xLabelY}" text-anchor="middle" font-size="${labelFontSize}" font-weight="600">${d.label}</text>`)
         .join("")}
     </svg>`;
   node.querySelectorAll("[data-clickable='true']").forEach((item) => {

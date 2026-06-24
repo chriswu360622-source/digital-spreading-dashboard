@@ -324,7 +324,7 @@ select {
 }
 
 .chart svg text.chart-label {
-  fill: #566474;
+  fill: #324152;
 }
 
 .chart [data-clickable="true"] {

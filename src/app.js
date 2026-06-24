@@ -526,8 +526,8 @@ function renderComboChart(node, data, config) {
     left: config.pad?.left ?? 50,
   };
   const xLabelY = config.xLabelY ?? height - 12;
-  const labelFontSize = config.labelFontSize ?? 10;
-  const valueFontSize = config.valueFontSize ?? 9;
+  const labelFontSize = config.labelFontSize ?? 9;
+  const valueFontSize = config.valueFontSize ?? 8;
   const plotW = width - pad.left - pad.right;
   const plotH = height - pad.top - pad.bottom;
   const barMax = Math.max(...data.flatMap((d) => config.bars.map((bar) => d[bar.key])), 1);
@@ -564,7 +564,7 @@ function renderComboChart(node, data, config) {
               const h = (d[bar.key] / barMax) * plotH;
               const x = start + j * barW;
               const y = pad.top + plotH - h;
-              const labelY = Math.max(pad.top + 10, y - 8);
+              const labelY = Math.max(pad.top + 12, y - 10);
               const labelDx = config.bars.length > 1 ? (j === 0 ? -2 : 2) : 0;
               return `<rect x="${x}" y="${y}" width="${barW - 2}" height="${h}" fill="${bar.color}" />
                 <text class="chart-value chart-bar-value" x="${x + barW / 2}" y="${labelY}" dx="${labelDx}" text-anchor="middle" font-size="${valueFontSize}" font-weight="600">${bar.format(d[bar.key])}</text>`;
@@ -580,7 +580,7 @@ function renderComboChart(node, data, config) {
               const x = pad.left + i * groupW + groupW / 2;
               const y = pad.top + plotH - (d[line.key] / pctMax) * plotH;
               const filterKey = config.filterKey ? config.filterKey(d) : d.label;
-              const labelDy = line.labelDy ?? (line.key === "utilization" ? 22 : -16);
+              const labelDy = line.labelDy ?? (line.key === "utilization" ? 28 : -20);
               const labelY = Math.max(pad.top + 11, Math.min(pad.top + plotH - 6, y + labelDy));
               return `<g class="chart-item ${selectionClass(config.filterType, filterKey)}" data-clickable="true" data-filter-type="${config.filterType}" data-filter-key="${filterKey}">
                 <circle cx="${x}" cy="${y}" r="5" fill="${line.color}" />

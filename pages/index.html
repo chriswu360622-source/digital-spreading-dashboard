@@ -124,7 +124,7 @@
           if (onload) script.onload = onload;
           document.body.appendChild(script);
         };
-        loadScript("../data/dashboard-data.js", () => loadScript("./app.js"));
+        loadScript("./data/dashboard-data.js", () => loadScript("./app.js"));
       })();
     </script>
   </body>

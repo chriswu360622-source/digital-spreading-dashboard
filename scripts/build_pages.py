@@ -17,7 +17,7 @@ def copy_file(source: Path, dest: Path) -> None:
 
 def build_index() -> str:
     html = (SRC / "index.html").read_text(encoding="utf-8")
-    html = html.replace('<script src="../data/dashboard-data.js"></script>', '<script src="./data/dashboard-data.js"></script>')
+    html = html.replace('loadScript("../data/dashboard-data.js", () => loadScript("./app.js"));', 'loadScript("./data/dashboard-data.js", () => loadScript("./app.js"));')
     return html
 
 

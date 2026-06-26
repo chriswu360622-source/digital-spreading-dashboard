@@ -39,6 +39,11 @@ Layout tuning note:
 - Keep the bottom variance area compact enough that the top two charts remain fully readable on a single screen.
 - Use a lighter, simpler type treatment for the top charts so bar labels, line labels, and axis labels stay legible without visual heaviness.
 - Preserve `Spreader` and `Table` labels in chart labels and detail fields; do not hide those identifiers to save space.
+- X-axis label rendering rule:
+  - Prefer horizontal labels when the available width can show the full field names without crowding.
+  - If horizontal labels become cramped, switch to a compact vertical or diagonal-down layout instead of hiding labels.
+  - Keep the labels visually attached to the axis and close to the plotted marks so the field context stays obvious.
+  - Labels must remain fully readable and should not be covered by bars, line markers, or value labels.
 
 ## Required Data Model
 
@@ -218,6 +223,32 @@ Conditional formatting:
 - `Spreading Status = Ready`: light blue.
 - `Spreading Status = Spreading`: light orange.
 - `Spreading Status = Finished`: light green.
+
+### Axis Label Readability Standard
+
+Apply this rule to every future chart:
+
+1. Show the axis field name in the clearest orientation the chart can support.
+2. Use horizontal labels first when the category count and width allow it.
+3. When horizontal labels collide, rotate or tilt them into a compact vertical/diagonal form.
+4. Keep the text close to the axis line or baseline so it reads as part of the chart, not as detached caption text.
+5. Never sacrifice completeness of the category name just to save space.
+6. Ensure the label path does not overlap chart marks, bar labels, or line labels.
+
+### Mandatory Browser Verification
+
+Every dashboard modification must be verified in the rendered page, not only in code.
+
+Required loop:
+
+1. Rebuild the dashboard bundle or page.
+2. Open the actual dashboard in a browser.
+3. Execute the changed interaction or view.
+4. Capture the visible result.
+5. Compare the result with the requested behavior.
+6. If the result is wrong, fix the cause and repeat the loop until it matches.
+
+Do not mark a dashboard change complete until the browser check confirms the visible outcome.
 
 ## Global And Local Filters
 

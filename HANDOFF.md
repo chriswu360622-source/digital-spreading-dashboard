@@ -60,6 +60,19 @@ C:\Users\kobe1\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\p
 
 Current verification status: passed.
 
+## Mandatory UI Verification Loop
+
+For every dashboard change, do not stop at code edits.
+
+1. Rebuild the generated site or data bundle.
+2. Open the actual dashboard in a browser.
+3. Perform the exact interaction that was changed.
+4. Capture a screenshot or visual check of the result.
+5. Compare the screenshot against the requested outcome.
+6. If the result differs, trace the cause, fix it, and repeat the loop.
+
+Treat a change as unfinished until the browser test confirms the visible behavior matches the request.
+
 ## Live Mode
 
 Run:
@@ -91,3 +104,10 @@ Then commit and push the generated `pages/` directory. The public Pages workflow
 - `spreading efficiency = average(spreader/date EFF %)`.
 - `machine utilization = machine actual running time / actual working time`.
 - `utilization = average(machine/date utilization)`.
+
+## Current Presentation Rules
+
+- Prefer horizontal X-axis labels when they fit clearly.
+- If horizontal labels become crowded, switch to a compact vertical or diagonal-down layout.
+- Keep the label close to the axis and preserve the full field name.
+- Never hide important field context just to save space.

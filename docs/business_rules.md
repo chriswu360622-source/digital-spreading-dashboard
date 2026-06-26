@@ -169,3 +169,13 @@ Default assumption: simple/unweighted average across selected machine/date utili
 ## PBI Versus Dashboard Rule
 
 The current PBI used a simplified fixed-time formula that is difficult to maintain and does not calculate true work time accurately. The new Dashboard must use the actual working-time logic above for efficiency and utilization.
+
+## Chart Axis Label Rule
+
+This presentation rule applies to all future dashboard charts:
+
+- Use horizontal axis labels when the field names fit clearly.
+- If horizontal labels become cramped or overlap, switch to a compact vertical or diagonal-down layout.
+- Keep the label close to the axis line so the field context remains visually connected to the chart.
+- Never hide or truncate important axis fields just to make the layout look cleaner.
+- The final label orientation must preserve readability, completeness, and separation from chart marks.

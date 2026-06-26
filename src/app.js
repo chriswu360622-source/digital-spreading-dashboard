@@ -8,6 +8,7 @@ const state = {
   tables: new Set(),
   tableFilter: null,
   chartFilter: null,
+  kpiFocus: null,
   tableSort: { key: "spreadingTable", direction: "asc" },
 };
 
@@ -50,6 +51,16 @@ const fmt = {
     return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
   },
 };
+
+function axisLabelLayout({ label, x, baselineY, groupWidth = 0, fontSize = 8, force = "auto" }) {
+  const safeLabel = escapeHtml(label);
+  const normalized = String(label || "");
+  const crowded = force === "vertical" || (force === "auto" && (groupWidth < 72 || normalized.length > 8));
+  if (!crowded) {
+    return `<text class="chart-label" x="${x}" y="${baselineY}" text-anchor="middle" font-size="${fontSize}" font-weight="600">${safeLabel}</text>`;
+  }
+  return `<text class="chart-label" transform="translate(${x},${baselineY}) rotate(-50)" text-anchor="start" dominant-baseline="middle" font-size="${Math.max(7, fontSize - 0.2)}" font-weight="700">${safeLabel}</text>`;
+}
 
 const visualVariant = new URLSearchParams(window.location.search).get("look") || "balanced";
 const chartStylePresets = {
@@ -103,8 +114,31 @@ const el = {
   varianceChart: document.querySelector("#varianceChart"),
   detailBody: document.querySelector("#detailBody"),
   rowCount: document.querySelector("#rowCount"),
+  drillPanel: document.querySelector("#drillPanel"),
+  drillBackdrop: document.querySelector("#drillBackdrop"),
+  drillTitle: document.querySelector("#drillTitle"),
+  drillSubtitle: document.querySelector("#drillSubtitle"),
+  drillSpreaderChart: document.querySelector("#drillSpreaderChart"),
+  drillSpCodeChart: document.querySelector("#drillSpCodeChart"),
+  drillTableLabel: document.querySelector("#drillTableLabel"),
+  drillTableBody: document.querySelector("#drillTableBody"),
+  drillRowCount: document.querySelector("#drillRowCount"),
+  drillCloseButton: document.querySelector("#drillCloseButton"),
   generatedAt: document.querySelector("#generatedAt"),
 };
+
+const kpiSpecs = [
+  { key: "countCutRef", label: "COUNT OF CUTREF#" },
+  { key: "totalYards", label: "SPREAD QTY (YARD)" },
+  { key: "damage", label: "DAMAGE (YARD)" },
+  { key: "excessYard", label: "EXCESS YARD" },
+  { key: "lackingYard", label: "LACKING YARD" },
+  { key: "spreadingEfficiency", label: "SPREADING EFF %" },
+  { key: "utilization", label: "UTILIZATION %" },
+  { key: "hourlyTarget", label: "HOURLY TARGET" },
+];
+
+const drillKpis = new Set(["damage", "excessYard", "lackingYard"]);
 
 const helpSpec = {
   terms: [
@@ -374,6 +408,52 @@ function renderHelpDialog() {
   `;
 }
 
+function kpiValue(values, key) {
+  switch (key) {
+    case "countCutRef":
+      return fmt.integer(values.countCutRef);
+    case "totalYards":
+      return fmt.number(values.totalYards);
+    case "damage":
+      return fmt.number(values.damage);
+    case "excessYard":
+      return fmt.number(values.excessYard);
+    case "lackingYard":
+      return fmt.number(values.lackingYard);
+    case "spreadingEfficiency":
+      return fmt.pct(values.spreadingEfficiency);
+    case "utilization":
+      return fmt.pct(values.utilization);
+    case "hourlyTarget":
+      return `${fmt.integer(state.hourlyTarget)} yd/h`;
+    default:
+      return "";
+  }
+}
+
+function kpiMetricValue(values, key) {
+  switch (key) {
+    case "countCutRef":
+      return values.countCutRef;
+    case "totalYards":
+      return values.totalYards;
+    case "damage":
+      return values.damage;
+    case "excessYard":
+      return values.excessYard;
+    case "lackingYard":
+      return values.lackingYard;
+    case "spreadingEfficiency":
+      return values.spreadingEfficiency;
+    case "utilization":
+      return values.utilization;
+    case "hourlyTarget":
+      return state.hourlyTarget;
+    default:
+      return 0;
+  }
+}
+
 const detailColumns = [
   { key: "cutRef", label: "CutRef", sortKey: "cutRef" },
   { key: "spreadingRef", label: "Spreading Ref", sortKey: "spreadingRef" },
@@ -394,6 +474,7 @@ const detailColumns = [
 
 function cellValue(row, key, spreaderRecords) {
   if (key === "spreaderCode") return row.sp || row.spreader || "";
+  if (key === "spCode") return row.sp || row.spreader || "";
   if (key === "spreadingRef") return row.spreadingRef || "";
   if (key === "seq") return row.seq || "";
   if (key === "spreaderName") return row.spreaderName || row.spreader || "";
@@ -407,6 +488,7 @@ function cellValue(row, key, spreaderRecords) {
 
 function sortValue(row, key, spreaderRecords) {
   if (key === "spreaderCode") return String(row.sp || row.spreader || "");
+  if (key === "spCode") return String(row.sp || row.spreader || "");
   if (key === "spreadingRef") return String(row.spreadingRef || "");
   if (key === "seq") return String(row.seq || "");
   if (key === "spreaderName") return String(row.spreaderName || row.spreader || "");
@@ -506,17 +588,14 @@ function metrics(summary, detail) {
 }
 
 function renderKpis(values) {
-  const items = [
-    ["COUNT OF CUTREF#", fmt.integer(values.countCutRef)],
-    ["SPREAD QTY (YARD)", fmt.number(values.totalYards)],
-    ["DAMAGE (YARD)", fmt.number(values.damage)],
-    ["EXCESS YARD", fmt.number(values.excessYard)],
-    ["LACKING YARD", fmt.number(values.lackingYard)],
-    ["SPREADING EFF %", fmt.pct(values.spreadingEfficiency)],
-    ["UTILIZATION %", fmt.pct(values.utilization)],
-    ["HOURLY TARGET", `${fmt.integer(state.hourlyTarget)} yd/h`],
-  ];
-  el.kpiGrid.innerHTML = items.map(([label, value]) => `<article class="kpi"><h3>${label}</h3><strong>${value}</strong></article>`).join("");
+  el.kpiGrid.innerHTML = kpiSpecs
+    .map(
+      (item) => `<article class="kpi ${state.kpiFocus === item.key ? "selected" : ""}" data-kpi-key="${item.key}">
+        <h3>${item.label}</h3>
+        <strong>${kpiValue(values, item.key)}</strong>
+      </article>`,
+    )
+    .join("");
 }
 
 function aggregateSpreader(records) {
@@ -541,6 +620,39 @@ function aggregateMachine(records) {
       utilization: average(rows.map((row) => row.utilization)),
     }))
     .sort((a, b) => tableSort(a.label, b.label));
+}
+
+function drillMetricValue(rows, metricKey) {
+  if (metricKey === "damage") return sum(rows, "damageYard");
+  if (metricKey === "excessYard") return rows.reduce((acc, row) => acc + Math.max(0, Number(row.varianceYard || 0)), 0);
+  if (metricKey === "lackingYard") return rows.reduce((acc, row) => acc + Math.min(0, Number(row.varianceYard || 0)), 0);
+  return 0;
+}
+
+function buildFocusSeries(detail, metricKey, groupKey) {
+  const labelFn =
+    groupKey === "spCode"
+      ? (row) => row.sp || row.spreader || "Unknown"
+      : groupKey === "spreader"
+        ? (row) => row.spreaderName || row.spreader || "Unknown"
+        : (row) => row[groupKey] || "Unknown";
+  const groups = [...groupBy(detail, labelFn).entries()]
+    .map(([label, rows]) => {
+      const spreaderName = rows[0]?.spreaderName || rows[0]?.spreader || "Unknown";
+      const spCode = rows[0]?.sp || rows[0]?.spreader || "Unknown";
+      return {
+        label: groupKey === "spCode" ? spCode : spreaderName,
+        detailLabel: groupKey === "spCode" ? `${spCode} / ${spreaderName}` : `${spreaderName} / ${spCode}`,
+        value: drillMetricValue(rows, metricKey),
+        rollCount: new Set(rows.map((row) => row.roll).filter(Boolean)).size,
+      };
+    })
+    .sort((a, b) => {
+      const delta = metricKey === "lackingYard" ? a.value - b.value : b.value - a.value;
+      if (delta !== 0) return delta;
+      return tableSort(a.label, b.label);
+    });
+  return groups;
 }
 
 function toggleChartFilter(type, key) {
@@ -670,16 +782,126 @@ function renderVarianceChart(detail) {
           const y = d.value >= 0 ? zero - h : zero;
           const color = d.value >= 0 ? "var(--green)" : "var(--red)";
           const valueY = d.value >= 0 ? Math.max(pad.top + 11, y - 4) : Math.min(height - 16, y + h + 12);
-          const labelY = height - 10;
+          const labelY = height - 8;
           return `<g class="chart-item ${selectionClass("roll", d.label)}" data-clickable="true" data-filter-type="roll" data-filter-key="${d.label}">
             <rect x="${x}" y="${y}" width="${barW}" height="${h}" fill="${color}" />
             <text class="chart-value chart-variance-value" x="${x + barW / 2}" y="${valueY}" text-anchor="middle" font-size="9" font-weight="600" fill="${color}">${Math.round(d.value)}</text>
-            <text class="chart-label chart-variance-label" transform="translate(${x + barW / 2},${labelY}) rotate(-35)" text-anchor="end" font-size="7" font-weight="500">${d.label}</text>
+            ${axisLabelLayout({ label: d.label, x: x + barW / 2, baselineY: labelY, groupWidth: barW, fontSize: 7 })}
           </g>`;
         })
         .join("")}
     </svg>`;
   el.varianceChart.querySelectorAll("[data-clickable='true']").forEach((item) => {
+    item.addEventListener("click", () => toggleChartFilter(item.dataset.filterType, item.dataset.filterKey));
+  });
+}
+
+function renderKpiDrill(detail, values) {
+  if (!state.kpiFocus || !drillKpis.has(state.kpiFocus)) {
+    el.drillPanel.classList.add("is-hidden");
+    el.drillBackdrop.classList.add("is-hidden");
+    document.body.classList.remove("modal-open");
+    return;
+  }
+
+  const focusLabel = kpiSpecs.find((item) => item.key === state.kpiFocus)?.label || "Selected KPI";
+  const metricKey = state.kpiFocus;
+  const spreaderRows = buildFocusSeries(detail, metricKey, "spreader");
+  const spCodeRows = buildFocusSeries(detail, metricKey, "spCode");
+
+  el.drillPanel.classList.remove("is-hidden");
+  el.drillBackdrop.classList.remove("is-hidden");
+  document.body.classList.add("modal-open");
+  el.drillTitle.textContent = `${focusLabel} - Spreader / SP# Preview`;
+  el.drillSubtitle.textContent = `Modal detail view using the same global filters (${state.startDate} to ${state.endDate}, ${state.status}${state.tableFilter ? `, ${state.tableFilter}` : ""}).`;
+  el.drillTableLabel.textContent = "Detail Rows";
+
+  renderDrillBarChart(el.drillSpreaderChart, spreaderRows, {
+    title: "Spreader",
+    metricKey,
+    filterType: "spreader",
+  });
+  renderDrillBarChart(el.drillSpCodeChart, spCodeRows, {
+    title: "SP#",
+    metricKey,
+    filterType: "spCode",
+  });
+
+  const drillRows = detail.slice(0, 20);
+  el.drillRowCount.textContent = `${detail.length} filtered rows`;
+  el.drillTableBody.innerHTML = drillRows
+    .map((row) => {
+      const cells = detailColumns.map((column) => `<td>${escapeHtml(cellValue(row, column.key, values.spreaderRecords))}</td>`);
+      return `<tr>${cells.join("")}</tr>`;
+    })
+    .join("");
+}
+
+function renderDrillBarChart(node, data, config) {
+  const width = 520;
+  const height = 272;
+  const pad = { top: 34, right: 34, bottom: 62, left: 48 };
+  const plotW = width - pad.left - pad.right;
+  const plotH = height - pad.top - pad.bottom;
+  const values = data.map((d) => Number(d.value || 0));
+  const min = Math.min(0, ...values);
+  const max = Math.max(0, ...values);
+  const range = max - min || 1;
+  const zeroY = pad.top + plotH - ((0 - min) / range) * plotH;
+  const lineMax = Math.max(1, ...data.map((d) => Number(d.rollCount || 0)));
+  const barW = Math.max(12, Math.min(34, plotW / Math.max(data.length, 1) - 8));
+  const groupW = plotW / Math.max(data.length, 1);
+  const color = config.metricKey === "damage" ? "var(--blue)" : config.metricKey === "excessYard" ? "var(--green)" : "var(--red)";
+  const lineColor = "#6b6f77";
+  const linePoints = data
+    .map((d, i) => {
+      const x = pad.left + i * groupW + groupW / 2;
+      const y = pad.top + plotH - (Number(d.rollCount || 0) / lineMax) * plotH;
+      return `${x},${y}`;
+    })
+    .join(" ");
+
+  node.innerHTML = `
+    <div class="legend drill-legend">
+      <span><i style="background:${color}"></i>${config.title} (yard)</span>
+      <span><i style="background:${lineColor}"></i>Roll# count</span>
+    </div>
+    <svg viewBox="0 0 ${width} ${height}" role="img">
+      <line x1="${pad.left}" y1="${zeroY}" x2="${width - pad.right}" y2="${zeroY}" stroke="#bcc6d1" />
+      <line x1="${pad.left}" y1="${pad.top}" x2="${pad.left}" y2="${pad.top + plotH}" stroke="#c6ced8" />
+      <line x1="${width - pad.right}" y1="${pad.top}" x2="${width - pad.right}" y2="${pad.top + plotH}" stroke="#c6ced8" />
+      <text x="8" y="${pad.top + 8}" fill="#667282" font-size="12">Yard</text>
+      <text x="${width - pad.right + 10}" y="${pad.top + 8}" fill="#667282" font-size="12">Rolls</text>
+      ${data
+        .map((d, i) => {
+          const value = Number(d.value || 0);
+          const mappedY = pad.top + plotH - ((value - min) / range) * plotH;
+          const x = pad.left + i * groupW + (groupW - barW) / 2;
+          const top = value >= 0 ? mappedY : zeroY;
+          const h = Math.max(1, Math.abs(zeroY - mappedY));
+          const labelY = value >= 0 ? Math.max(pad.top + 11, top - 5) : Math.min(height - 26, top + h + 13);
+          const labelX = x + barW / 2;
+          return `<g class="chart-item ${selectionClass(config.filterType, d.label)}" data-clickable="true" data-filter-type="${config.filterType}" data-filter-key="${escapeHtml(d.label)}">
+            <rect x="${x}" y="${top}" width="${barW}" height="${h}" fill="${color}" />
+            <text class="chart-value chart-bar-value" x="${x + barW / 2}" y="${labelY}" text-anchor="middle" font-size="9" font-weight="600" fill="${color}">${fmt.number(value, 0)}</text>
+          ${axisLabelLayout({ label: d.label, x: labelX, baselineY: height - 20, groupWidth: groupW, fontSize: 8.3, force: "vertical" })}
+          </g>`;
+        })
+        .join("")}
+      <polyline points="${linePoints}" fill="none" stroke="${lineColor}" stroke-width="2.2" stroke-dasharray="2 2" />
+      ${data
+        .map((d, i) => {
+          const x = pad.left + i * groupW + groupW / 2;
+          const y = pad.top + plotH - (Number(d.rollCount || 0) / lineMax) * plotH;
+          return `<g class="chart-item ${selectionClass(config.filterType, d.label)}" data-clickable="true" data-filter-type="${config.filterType}" data-filter-key="${escapeHtml(d.label)}">
+            <circle cx="${x}" cy="${y}" r="4" fill="${lineColor}" />
+            <text class="chart-value chart-line-value" x="${x}" y="${Math.max(pad.top + 11, y - 8)}" text-anchor="middle" font-size="9" font-weight="600" fill="${lineColor}">${fmt.integer(d.rollCount)}</text>
+          </g>`;
+        })
+        .join("")}
+    </svg>`;
+
+  node.querySelectorAll("[data-clickable='true']").forEach((item) => {
     item.addEventListener("click", () => toggleChartFilter(item.dataset.filterType, item.dataset.filterKey));
   });
 }
@@ -776,6 +998,7 @@ function render() {
   });
   renderVarianceChart(detail);
   renderDetailTable(detail, values.spreaderRecords);
+  renderKpiDrill(detail, values);
 
   el.tableButtons.querySelectorAll("button[data-table]").forEach((button) => {
     button.classList.toggle("active", !state.tableFilter || button.dataset.table === state.tableFilter);
@@ -810,6 +1033,13 @@ function initFilters() {
 }
 
 function wireEvents() {
+  el.kpiGrid.addEventListener("click", (event) => {
+    const card = event.target.closest("[data-kpi-key]");
+    if (!card) return;
+    const key = card.dataset.kpiKey;
+    state.kpiFocus = drillKpis.has(key) ? (state.kpiFocus === key ? null : key) : null;
+    render();
+  });
   el.helpButton.addEventListener("click", () => {
     renderHelpDialog();
     if (typeof el.helpDialog.showModal === "function") {
@@ -821,6 +1051,14 @@ function wireEvents() {
   el.helpCloseButton.addEventListener("click", () => {
     el.helpDialog.close?.();
     el.helpDialog.removeAttribute("open");
+  });
+  el.drillCloseButton.addEventListener("click", () => {
+    state.kpiFocus = null;
+    render();
+  });
+  el.drillBackdrop.addEventListener("click", () => {
+    state.kpiFocus = null;
+    render();
   });
   el.helpDialog.addEventListener("click", (event) => {
     if (event.target === el.helpDialog) {

@@ -917,7 +917,7 @@ function renderKpiDrill(detail, values) {
 function renderDrillBarChart(node, data, config) {
   const width = 520;
   const height = 272;
-  const pad = { top: 30, right: 24, bottom: 58, left: 32 };
+  const pad = { top: 30, right: 24, bottom: 58, left: 24 };
   const plotW = width - pad.left - pad.right;
   const plotH = height - pad.top - pad.bottom;
   const values = data.map((d) => Number(d.value || 0));

@@ -44,3 +44,9 @@ python scripts\build_data.py
 The Dashboard uses the user-confirmed business rules in `docs/business_rules.md`, including editable `Hourly Target` and true actual-working-time logic for efficiency and utilization.
 
 If you run `scripts\start_dashboard.py`, the page will auto-reload when `data/dashboard-data.json` changes.
+
+## Table Interaction Standard
+
+- All dashboard tables should support sortable headers with ascending/descending toggles.
+- All table cells that represent a field value should remain clickable so they can drive cross-filtering.
+- Drill/modal tables should use the same filtering and sorting pattern as the main detail table so chart values and tabular values stay aligned.

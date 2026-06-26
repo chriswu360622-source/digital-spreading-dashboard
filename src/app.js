@@ -10,6 +10,7 @@ const state = {
   chartFilter: null,
   kpiFocus: null,
   tableSort: { key: "spreadingTable", direction: "asc" },
+  drillTableSort: { key: "roll", direction: "asc" },
 };
 
 const autoRefresh = {
@@ -184,6 +185,7 @@ const el = {
   drillSpCodeChart: document.querySelector("#drillSpCodeChart"),
   drillTableLabel: document.querySelector("#drillTableLabel"),
   drillTableBody: document.querySelector("#drillTableBody"),
+  drillTableHead: document.querySelector("#drillTableHead"),
   drillRowCount: document.querySelector("#drillRowCount"),
   drillReportButton: document.querySelector("#drillReportButton"),
   drillCloseButton: document.querySelector("#drillCloseButton"),
@@ -905,13 +907,58 @@ function renderKpiDrill(detail, values) {
     filterType: "spCode",
   });
 
-  el.drillRowCount.textContent = `${drillRows.length} filtered rows`;
-  el.drillTableBody.innerHTML = drillRows
+  const sortedDrillRows = drillRows
+    .slice()
+    .sort((a, b) => {
+      const dir = state.drillTableSort.direction === "desc" ? -1 : 1;
+      const left = sortValue(a, state.drillTableSort.key, values.spreaderRecords);
+      const right = sortValue(b, state.drillTableSort.key, values.spreaderRecords);
+      let result;
+      if (typeof left === "number" && typeof right === "number") {
+        result = left - right;
+      } else {
+        result = String(left).localeCompare(String(right), "en-US", { numeric: true, sensitivity: "base" });
+      }
+      if (result === 0) result = String(a.roll || "").localeCompare(String(b.roll || ""), "en-US", { numeric: true, sensitivity: "base" });
+      return dir * result;
+    });
+
+  el.drillRowCount.textContent = `${sortedDrillRows.length} filtered rows`;
+  el.drillTableHead.innerHTML = detailColumns
+    .map((column) => {
+      const active = state.drillTableSort.key === (column.sortKey || column.key);
+      const arrow = active ? (state.drillTableSort.direction === "asc" ? " ▲" : " ▼") : "";
+      return `<th class="sortable ${active ? "active-sort" : ""}" data-sort-key="${column.sortKey || column.key}" aria-sort="${active ? (state.drillTableSort.direction === "asc" ? "ascending" : "descending") : "none"}">${escapeHtml(column.label)}${arrow}</th>`;
+    })
+    .join("");
+  el.drillTableBody.innerHTML = sortedDrillRows
     .map((row) => {
-      const cells = detailColumns.map((column) => `<td>${escapeHtml(cellValue(row, column.key, values.spreaderRecords))}</td>`);
+      const cells = detailColumns.map((column) => {
+        const value = cellValue(row, column.key, values.spreaderRecords);
+        return `<td data-clickable="true" data-field="${column.sortKey || column.key}" data-value="${escapeHtml(value)}">${escapeHtml(value)}</td>`;
+      });
       return `<tr>${cells.join("")}</tr>`;
     })
     .join("");
+
+  el.drillTableBody.querySelectorAll("td[data-clickable='true']").forEach((cell) => {
+    cell.addEventListener("click", () => {
+      toggleChartFilter(cell.dataset.field, cell.dataset.value);
+    });
+  });
+
+  el.drillTableHead.querySelectorAll("th.sortable").forEach((th) => {
+    th.onclick = () => {
+      const key = th.dataset.sortKey;
+      if (state.drillTableSort.key === key) {
+        state.drillTableSort.direction = state.drillTableSort.direction === "asc" ? "desc" : "asc";
+      } else {
+        state.drillTableSort.key = key;
+        state.drillTableSort.direction = "asc";
+      }
+      render();
+    };
+  });
 }
 
 function renderDrillBarChart(node, data, config) {
@@ -990,6 +1037,7 @@ function rowEff(row, spreaderRecords) {
 
 function renderDetailTable(detail, spreaderRecords) {
   el.rowCount.textContent = `${detail.length} rows`;
+  const mainTable = el.detailBody.closest("table");
   const sorted = detail
     .slice()
     .sort((a, b) => {
@@ -1027,7 +1075,7 @@ function renderDetailTable(detail, spreaderRecords) {
     });
   });
 
-  document.querySelectorAll("th.sortable").forEach((th) => {
+  mainTable?.querySelectorAll("th.sortable").forEach((th) => {
     const key = th.dataset.sortKey;
     const active = state.tableSort.key === key;
     th.dataset.direction = active ? state.tableSort.direction : "";
@@ -1036,7 +1084,7 @@ function renderDetailTable(detail, spreaderRecords) {
     th.innerHTML = `${th.textContent.replace(/[▲▼]/g, "").trim()}${active ? (state.tableSort.direction === "asc" ? " ▲" : " ▼") : ""}`;
   });
 
-  document.querySelectorAll("th.sortable").forEach((th) => {
+  mainTable?.querySelectorAll("th.sortable").forEach((th) => {
     th.onclick = () => {
       const key = th.dataset.sortKey;
       if (state.tableSort.key === key) {

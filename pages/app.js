@@ -376,9 +376,11 @@ function renderHelpDialog() {
 
 const detailColumns = [
   { key: "cutRef", label: "CutRef", sortKey: "cutRef" },
+  { key: "spreadingRef", label: "Spreading Ref", sortKey: "spreadingRef" },
+  { key: "seq", label: "Seq", sortKey: "seq" },
   { key: "roll", label: "Roll", sortKey: "roll" },
   { key: "spreadingTable", label: "Table", sortKey: "spreadingTable" },
-  { key: "spreaderCode", label: "SP#", sortKey: "spreader" },
+  { key: "spreaderCode", label: "SP#", sortKey: "spCode" },
   { key: "spreaderName", label: "Spreader", sortKey: "spreaderName" },
   { key: "totalYardsSpread", label: "Total Yards (YARD)", sortKey: "totalYardsSpread" },
   { key: "damageYard", label: "Damage (YARD)", sortKey: "damageYard" },
@@ -391,7 +393,9 @@ const detailColumns = [
 ];
 
 function cellValue(row, key, spreaderRecords) {
-  if (key === "spreaderCode") return row.spreader || "";
+  if (key === "spreaderCode") return row.sp || row.spreader || "";
+  if (key === "spreadingRef") return row.spreadingRef || "";
+  if (key === "seq") return row.seq || "";
   if (key === "spreaderName") return row.spreaderName || row.spreader || "";
   if (key === "effPct") return fmt.pct(rowEff(row, spreaderRecords));
   if (key === "startTime") return fmt.time(row.startTime);
@@ -402,7 +406,9 @@ function cellValue(row, key, spreaderRecords) {
 }
 
 function sortValue(row, key, spreaderRecords) {
-  if (key === "spreaderCode") return String(row.spreader || "");
+  if (key === "spreaderCode") return String(row.sp || row.spreader || "");
+  if (key === "spreadingRef") return String(row.spreadingRef || "");
+  if (key === "seq") return String(row.seq || "");
   if (key === "spreaderName") return String(row.spreaderName || row.spreader || "");
   if (key === "effPct") return rowEff(row, spreaderRecords);
   if (key === "startTime" || key === "endTime") return minutesOfDay(row[key]);

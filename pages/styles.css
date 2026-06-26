@@ -348,6 +348,21 @@ body.modal-open {
   background: #f4f8fb;
 }
 
+.drill-report-button {
+  border: 1px solid #6c93b4;
+  background: #eef6fc;
+  color: #1f4b72;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.drill-report-button:hover {
+  background: #deedf8;
+}
+
 .drill-charts {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

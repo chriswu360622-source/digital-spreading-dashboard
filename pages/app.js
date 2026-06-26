@@ -62,6 +62,41 @@ function axisLabelLayout({ label, x, baselineY, groupWidth = 0, fontSize = 8, fo
   return `<text class="chart-label" transform="translate(${x},${baselineY}) rotate(-50)" text-anchor="start" dominant-baseline="middle" font-size="${Math.max(7, fontSize - 0.2)}" font-weight="700">${safeLabel}</text>`;
 }
 
+function csvEscape(value) {
+  const text = String(value ?? "");
+  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+}
+
+function downloadTextFile(filename, content, mimeType = "text/plain;charset=utf-8") {
+  const blob = new Blob(["\ufeff", content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function buildDrillReportCsv(rows, spreaderRecords) {
+  const header = detailColumns.map((column) => csvEscape(column.label)).join(",");
+  const lines = rows.map((row) => detailColumns.map((column) => csvEscape(cellValue(row, column.key, spreaderRecords))).join(","));
+  return [header, ...lines].join("\r\n");
+}
+
+function downloadDrillReport() {
+  if (!drillReportContext.rows.length) return;
+  const safeTitle = (drillReportContext.title || "drill-report")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  const safeDate = (state.startDate || "filtered").replaceAll("/", "-");
+  const filename = `${safeTitle || "drill-report"}-${safeDate}.csv`;
+  const csv = buildDrillReportCsv(drillReportContext.rows, drillReportContext.spreaderRecords);
+  downloadTextFile(filename, csv, "text/csv;charset=utf-8");
+}
+
 const visualVariant = new URLSearchParams(window.location.search).get("look") || "balanced";
 const chartStylePresets = {
   clean: {
@@ -123,6 +158,7 @@ const el = {
   drillTableLabel: document.querySelector("#drillTableLabel"),
   drillTableBody: document.querySelector("#drillTableBody"),
   drillRowCount: document.querySelector("#drillRowCount"),
+  drillReportButton: document.querySelector("#drillReportButton"),
   drillCloseButton: document.querySelector("#drillCloseButton"),
   generatedAt: document.querySelector("#generatedAt"),
 };
@@ -139,6 +175,11 @@ const kpiSpecs = [
 ];
 
 const drillKpis = new Set(["damage", "excessYard", "lackingYard"]);
+const drillReportContext = {
+  rows: [],
+  spreaderRecords: [],
+  title: "",
+};
 
 const helpSpec = {
   terms: [
@@ -798,6 +839,10 @@ function renderVarianceChart(detail) {
 
 function renderKpiDrill(detail, values) {
   if (!state.kpiFocus || !drillKpis.has(state.kpiFocus)) {
+    drillReportContext.rows = [];
+    drillReportContext.spreaderRecords = [];
+    drillReportContext.title = "";
+    if (el.drillReportButton) el.drillReportButton.disabled = true;
     el.drillPanel.classList.add("is-hidden");
     el.drillBackdrop.classList.add("is-hidden");
     document.body.classList.remove("modal-open");
@@ -815,6 +860,10 @@ function renderKpiDrill(detail, values) {
   el.drillTitle.textContent = `${focusLabel} - Spreader / SP# Preview`;
   el.drillSubtitle.textContent = `Modal detail view using the same global filters (${state.startDate} to ${state.endDate}, ${state.status}${state.tableFilter ? `, ${state.tableFilter}` : ""}).`;
   el.drillTableLabel.textContent = "Detail Rows";
+  drillReportContext.rows = detail.slice();
+  drillReportContext.spreaderRecords = values.spreaderRecords;
+  drillReportContext.title = focusLabel;
+  if (el.drillReportButton) el.drillReportButton.disabled = !detail.length;
 
   renderDrillBarChart(el.drillSpreaderChart, spreaderRows, {
     title: "Spreader",
@@ -1052,6 +1101,7 @@ function wireEvents() {
     el.helpDialog.close?.();
     el.helpDialog.removeAttribute("open");
   });
+  el.drillReportButton?.addEventListener("click", downloadDrillReport);
   el.drillCloseButton.addEventListener("click", () => {
     state.kpiFocus = null;
     render();

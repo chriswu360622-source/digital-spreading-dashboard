@@ -178,7 +178,8 @@
           if (onload) script.onload = onload;
           document.body.appendChild(script);
         };
-        loadScript("../data/dashboard-data.js", () => loadScript("./app.js"));
+        const base = window.location.pathname.endsWith("/src/index.html") ? "../" : "./";
+        loadScript(`${base}data/dashboard-data.js`, () => loadScript(`${base}app.js`));
       })();
     </script>
   </body>

@@ -327,6 +327,14 @@ body.modal-open {
   font-size: 9px;
 }
 
+.drill-note {
+  display: block;
+  color: #3f556c;
+  font-size: 8.5px;
+  margin-top: 2px;
+  font-style: italic;
+}
+
 .drill-heading-meta {
   display: flex;
   align-items: center;

@@ -110,6 +110,19 @@ function drillRowsForMetric(detail, metricKey) {
   return detail.slice();
 }
 
+function drillNoteText(metricKey) {
+  if (metricKey === "damage") {
+    return "This drill view only includes roll records with Damage (YARD) above 0. The chart, table, and report all use the same filtered rows.";
+  }
+  if (metricKey === "lackingYard") {
+    return "This drill view only includes roll records where Variance (YARD) is below -0.5. The chart, table, and report all use the same filtered rows.";
+  }
+  if (metricKey === "excessYard") {
+    return "This drill view only includes roll records where Variance (YARD) is above 0.5. The chart, table, and report all use the same filtered rows.";
+  }
+  return "Chart and table use the same filtered roll set.";
+}
+
 const visualVariant = new URLSearchParams(window.location.search).get("look") || "balanced";
 const chartStylePresets = {
   clean: {
@@ -166,6 +179,7 @@ const el = {
   drillBackdrop: document.querySelector("#drillBackdrop"),
   drillTitle: document.querySelector("#drillTitle"),
   drillSubtitle: document.querySelector("#drillSubtitle"),
+  drillNote: document.querySelector("#drillNote"),
   drillSpreaderChart: document.querySelector("#drillSpreaderChart"),
   drillSpCodeChart: document.querySelector("#drillSpCodeChart"),
   drillTableLabel: document.querySelector("#drillTableLabel"),
@@ -873,6 +887,7 @@ function renderKpiDrill(detail, values) {
   document.body.classList.add("modal-open");
   el.drillTitle.textContent = `${focusLabel} - Spreader / SP# Preview`;
   el.drillSubtitle.textContent = `Modal detail view using the same global filters (${state.startDate} to ${state.endDate}, ${state.status}${state.tableFilter ? `, ${state.tableFilter}` : ""}).`;
+  if (el.drillNote) el.drillNote.textContent = drillNoteText(metricKey);
   el.drillTableLabel.textContent = "Detail Rows";
   drillReportContext.rows = drillRows.slice();
   drillReportContext.spreaderRecords = values.spreaderRecords;

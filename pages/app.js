@@ -777,8 +777,13 @@ function render() {
 }
 
 function initFilters() {
-  const dates = unique(raw.summary.map((row) => row.spreadingDate));
-  const defaultDate = dates[dates.length - 1] || "";
+  const dates = unique(raw.summary.map((row) => activityDate(row))).filter(Boolean);
+  const defaultDate =
+    [...dates]
+      .reverse()
+      .find((date) => raw.summary.some((row) => activityDate(row) === date && row.status === state.status)) ||
+    dates[dates.length - 1] ||
+    "";
   state.startDate = defaultDate;
   state.endDate = defaultDate;
   state.tableFilter = null;

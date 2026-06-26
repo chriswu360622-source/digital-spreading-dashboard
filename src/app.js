@@ -102,10 +102,10 @@ function drillRowsForMetric(detail, metricKey) {
     return detail.filter((row) => Number(row.damageYard || 0) > 0);
   }
   if (metricKey === "lackingYard") {
-    return detail.filter((row) => Number(row.varianceYard || 0) < -1);
+    return detail.filter((row) => Number(row.varianceYard || 0) < -0.5);
   }
   if (metricKey === "excessYard") {
-    return detail.filter((row) => Number(row.varianceYard || 0) > 1);
+    return detail.filter((row) => Number(row.varianceYard || 0) > 0.5);
   }
   return detail.slice();
 }

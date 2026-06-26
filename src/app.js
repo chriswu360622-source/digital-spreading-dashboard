@@ -917,7 +917,7 @@ function renderKpiDrill(detail, values) {
 function renderDrillBarChart(node, data, config) {
   const width = 520;
   const height = 272;
-  const pad = { top: 34, right: 34, bottom: 62, left: 48 };
+  const pad = { top: 30, right: 24, bottom: 58, left: 32 };
   const plotW = width - pad.left - pad.right;
   const plotH = height - pad.top - pad.bottom;
   const values = data.map((d) => Number(d.value || 0));
@@ -926,7 +926,7 @@ function renderDrillBarChart(node, data, config) {
   const range = max - min || 1;
   const zeroY = pad.top + plotH - ((0 - min) / range) * plotH;
   const lineMax = Math.max(1, ...data.map((d) => Number(d.rollCount || 0)));
-  const barW = Math.max(12, Math.min(34, plotW / Math.max(data.length, 1) - 8));
+  const barW = Math.max(11, Math.min(26, plotW / Math.max(data.length, 1) * 0.36));
   const groupW = plotW / Math.max(data.length, 1);
   const color = config.metricKey === "damage" ? "var(--blue)" : config.metricKey === "excessYard" ? "var(--green)" : "var(--red)";
   const lineColor = "#6b6f77";
@@ -956,12 +956,12 @@ function renderDrillBarChart(node, data, config) {
           const x = pad.left + i * groupW + (groupW - barW) / 2;
           const top = value >= 0 ? mappedY : zeroY;
           const h = Math.max(1, Math.abs(zeroY - mappedY));
-          const labelY = value >= 0 ? Math.max(pad.top + 11, top - 5) : Math.min(height - 26, top + h + 13);
+          const labelY = value >= 0 ? Math.max(pad.top + 10, top - 4) : Math.min(height - 22, top + h + 11);
           const labelX = x + barW / 2;
           return `<g class="chart-item ${selectionClass(config.filterType, d.label)}" data-clickable="true" data-filter-type="${config.filterType}" data-filter-key="${escapeHtml(d.label)}">
             <rect x="${x}" y="${top}" width="${barW}" height="${h}" fill="${color}" />
-            <text class="chart-value chart-bar-value" x="${x + barW / 2}" y="${labelY}" text-anchor="middle" font-size="9" font-weight="600" fill="${color}">${fmt.number(value, 0)}</text>
-          ${axisLabelLayout({ label: d.label, x: labelX, baselineY: height - 20, groupWidth: groupW, fontSize: 8.3, force: "vertical" })}
+            <text class="chart-value chart-bar-value" x="${x + barW / 2}" y="${labelY}" text-anchor="middle" font-size="8" font-weight="600" fill="${color}">${fmt.number(value, 0)}</text>
+          ${axisLabelLayout({ label: d.label, x: labelX, baselineY: height - 18, groupWidth: groupW, fontSize: 7.7, force: "vertical" })}
           </g>`;
         })
         .join("")}
@@ -972,7 +972,7 @@ function renderDrillBarChart(node, data, config) {
           const y = pad.top + plotH - (Number(d.rollCount || 0) / lineMax) * plotH;
           return `<g class="chart-item ${selectionClass(config.filterType, d.label)}" data-clickable="true" data-filter-type="${config.filterType}" data-filter-key="${escapeHtml(d.label)}">
             <circle cx="${x}" cy="${y}" r="4" fill="${lineColor}" />
-            <text class="chart-value chart-line-value" x="${x}" y="${Math.max(pad.top + 11, y - 8)}" text-anchor="middle" font-size="9" font-weight="600" fill="${lineColor}">${fmt.integer(d.rollCount)}</text>
+            <text class="chart-value chart-line-value" x="${x}" y="${Math.max(pad.top + 10, y - 8)}" text-anchor="middle" font-size="8" font-weight="600" fill="${lineColor}">${fmt.integer(d.rollCount)}</text>
           </g>`;
         })
         .join("")}

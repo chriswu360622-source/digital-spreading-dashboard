@@ -97,6 +97,19 @@ function downloadDrillReport() {
   downloadTextFile(filename, csv, "text/csv;charset=utf-8");
 }
 
+function drillRowsForMetric(detail, metricKey) {
+  if (metricKey === "damage") {
+    return detail.filter((row) => Number(row.damageYard || 0) > 0);
+  }
+  if (metricKey === "lackingYard") {
+    return detail.filter((row) => Number(row.varianceYard || 0) < -1);
+  }
+  if (metricKey === "excessYard") {
+    return detail.filter((row) => Number(row.varianceYard || 0) > 1);
+  }
+  return detail.slice();
+}
+
 const visualVariant = new URLSearchParams(window.location.search).get("look") || "balanced";
 const chartStylePresets = {
   clean: {
@@ -853,6 +866,7 @@ function renderKpiDrill(detail, values) {
   const metricKey = state.kpiFocus;
   const spreaderRows = buildFocusSeries(detail, metricKey, "spreader");
   const spCodeRows = buildFocusSeries(detail, metricKey, "spCode");
+  const drillRows = drillRowsForMetric(detail, metricKey);
 
   el.drillPanel.classList.remove("is-hidden");
   el.drillBackdrop.classList.remove("is-hidden");
@@ -860,10 +874,10 @@ function renderKpiDrill(detail, values) {
   el.drillTitle.textContent = `${focusLabel} - Spreader / SP# Preview`;
   el.drillSubtitle.textContent = `Modal detail view using the same global filters (${state.startDate} to ${state.endDate}, ${state.status}${state.tableFilter ? `, ${state.tableFilter}` : ""}).`;
   el.drillTableLabel.textContent = "Detail Rows";
-  drillReportContext.rows = detail.slice();
+  drillReportContext.rows = drillRows.slice();
   drillReportContext.spreaderRecords = values.spreaderRecords;
   drillReportContext.title = focusLabel;
-  if (el.drillReportButton) el.drillReportButton.disabled = !detail.length;
+  if (el.drillReportButton) el.drillReportButton.disabled = !drillRows.length;
 
   renderDrillBarChart(el.drillSpreaderChart, spreaderRows, {
     title: "Spreader",
@@ -876,8 +890,7 @@ function renderKpiDrill(detail, values) {
     filterType: "spCode",
   });
 
-  const drillRows = detail.slice(0, 20);
-  el.drillRowCount.textContent = `${detail.length} filtered rows`;
+  el.drillRowCount.textContent = `${drillRows.length} filtered rows`;
   el.drillTableBody.innerHTML = drillRows
     .map((row) => {
       const cells = detailColumns.map((column) => `<td>${escapeHtml(cellValue(row, column.key, values.spreaderRecords))}</td>`);

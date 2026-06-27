@@ -845,11 +845,11 @@ function renderComboChart(node, data, config) {
 
 function renderMergedPairChart(node, data, config) {
   const width = 760;
-  const height = config.height ?? 272;
+  const height = config.height ?? 292;
   const pad = {
     top: config.pad?.top ?? 38,
     right: config.pad?.right ?? 42,
-    bottom: config.pad?.bottom ?? 60,
+    bottom: config.pad?.bottom ?? 72,
     left: config.pad?.left ?? 50,
   };
   const xLabelY = config.xLabelY ?? height - 10;
@@ -877,7 +877,6 @@ function renderMergedPairChart(node, data, config) {
     <svg viewBox="0 0 ${width} ${height}" role="img">
       <line x1="${pad.left}" y1="${pad.top + plotH}" x2="${width - pad.right}" y2="${pad.top + plotH}" stroke="#c6ced8" />
       <line x1="${pad.left}" y1="${pad.top}" x2="${pad.left}" y2="${pad.top + plotH}" stroke="#c6ced8" />
-      <text x="8" y="${pad.top + 8}" fill="#667282" font-size="12">${config.leftAxis}</text>
       <text x="${width - pad.right + 8}" y="${pad.top + 8}" fill="#667282" font-size="12">100%</text>
       ${[0.2, 0.4, 0.6, 0.8, 1].map((r) => `<line x1="${pad.left}" y1="${pad.top + plotH - r * plotH}" x2="${width - pad.right}" y2="${pad.top + plotH - r * plotH}" stroke="#d8dee6" stroke-dasharray="2 5" />`).join("")}
       ${data
@@ -892,6 +891,9 @@ function renderMergedPairChart(node, data, config) {
           const groupCenter = start + groupWidth / 2;
           const timeLabelY = Math.max(pad.top + 11, pad.top + plotH - timeH - 8);
           const yardsLabelY = Math.max(pad.top + 11, pad.top + plotH - yardsH - 8);
+          const timeValueY = timeH > 28 ? pad.top + plotH - timeH / 2 + 4 : Math.max(pad.top + 12, pad.top + plotH - timeH - 22);
+          const yardsValueY = yardsH > 28 ? pad.top + plotH - yardsH / 2 + 4 : Math.max(pad.top + 12, pad.top + plotH - yardsH - 22);
+          const groupLabelY = pad.top + plotH + 18;
           const tooltip = `${d.table} | Total Spread Time: ${fmt.number(d.runningMinutes, 0)} min | Target Spread Time: ${fmt.number(d.actualHours * 60, 0)} min | Machine Utilization: ${fmt.pct(d.utilization)} | Total Spread (Y): ${fmt.number(d.yards, 0)} | Target Spread (Y): ${fmt.number(d.target, 0)} | Output Completion: ${fmt.pct(d.efficiency)}`;
           return `<g class="chart-item ${selectionClass(config.filterType, d.label)}" data-clickable="true" data-filter-type="${config.filterType}" data-filter-key="${d.label}">
             <title>${escapeHtml(tooltip)}</title>
@@ -899,13 +901,13 @@ function renderMergedPairChart(node, data, config) {
             <rect x="${timeX}" y="${pad.top + plotH - timeH}" width="${pairW}" height="${timeH}" rx="3" fill="var(--purple)" opacity=".86" />
             <rect x="${timeX}" y="${pad.top + plotH - Math.max(4, timeH * 0.22)}" width="${pairW}" height="${Math.max(4, timeH * 0.22)}" rx="2" fill="white" opacity=".18" />
             <text class="chart-value chart-line-value" x="${timeX + pairW / 2}" y="${timeLabelY}" text-anchor="middle" font-size="${valueFontSize}" font-weight="${valueWeight}" fill="var(--purple)">${fmt.pct(d.utilization)}</text>
-            <text class="chart-label" x="${timeX + pairW / 2}" y="${pad.top + plotH + 16}" text-anchor="middle" font-size="10" font-weight="700" fill="#6f8192">Time</text>
+            <text class="chart-value chart-line-value" x="${timeX + pairW / 2}" y="${timeValueY}" text-anchor="middle" font-size="${Math.max(7, valueFontSize - 1)}" font-weight="700" fill="#243040">${fmt.number(d.runningMinutes, 0)} min</text>
             <rect x="${yardsX}" y="${pad.top}" width="${pairW}" height="${plotH}" rx="3" fill="#dce9fb" opacity=".96" />
             <rect x="${yardsX}" y="${pad.top + plotH - yardsH}" width="${pairW}" height="${yardsH}" rx="3" fill="var(--blue)" opacity=".9" />
             <rect x="${yardsX}" y="${pad.top + plotH - Math.max(4, yardsH * 0.18)}" width="${pairW}" height="${Math.max(4, yardsH * 0.18)}" rx="2" fill="white" opacity=".16" />
             <text class="chart-value chart-line-value" x="${yardsX + pairW / 2}" y="${yardsLabelY}" text-anchor="middle" font-size="${valueFontSize}" font-weight="${valueWeight}" fill="var(--orange)">${fmt.pct(d.efficiency)}</text>
-            <text class="chart-label" x="${yardsX + pairW / 2}" y="${pad.top + plotH + 16}" text-anchor="middle" font-size="10" font-weight="700" fill="#6f8192">Yards</text>
-            <text class="chart-label" x="${groupCenter}" y="${xLabelY}" text-anchor="middle" font-size="${labelFontSize}" font-weight="${labelWeight}" fill="${labelColor}">${d.label}</text>
+            <text class="chart-value chart-line-value" x="${yardsX + pairW / 2}" y="${yardsValueY}" text-anchor="middle" font-size="${Math.max(7, valueFontSize - 1)}" font-weight="700" fill="#243040">${fmt.number(d.yards, 0)}</text>
+            ${axisLabelLayout({ label: d.label, x: groupCenter, baselineY: groupLabelY, groupWidth: groupW, fontSize: 8.2, force: "vertical" })}
           </g>`;
         })
         .join("")}

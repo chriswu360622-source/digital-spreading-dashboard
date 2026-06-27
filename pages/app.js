@@ -843,6 +843,79 @@ function renderComboChart(node, data, config) {
   });
 }
 
+function renderMergedPairChart(node, data, config) {
+  const width = 760;
+  const height = config.height ?? 272;
+  const pad = {
+    top: config.pad?.top ?? 38,
+    right: config.pad?.right ?? 42,
+    bottom: config.pad?.bottom ?? 60,
+    left: config.pad?.left ?? 50,
+  };
+  const xLabelY = config.xLabelY ?? height - 10;
+  const labelFontSize = config.labelFontSize ?? chartStyle.labelFontSize;
+  const valueFontSize = config.valueFontSize ?? chartStyle.valueFontSize;
+  const labelWeight = config.labelWeight ?? chartStyle.labelWeight;
+  const valueWeight = config.valueWeight ?? chartStyle.valueWeight;
+  const labelColor = config.labelColor ?? chartStyle.labelColor;
+  const plotW = width - pad.left - pad.right;
+  const plotH = height - pad.top - pad.bottom;
+  const groupW = plotW / Math.max(data.length, 1);
+  const pairW = Math.min(28, Math.max(18, (groupW - 16) / 3));
+  const pairGap = Math.max(8, (groupW - pairW * 2) / 2);
+  const groupWidth = pairW * 2 + pairGap;
+  const groupStart = (i) => pad.left + i * groupW + (groupW - groupWidth) / 2;
+  const clampPct = (value) => Math.max(0, Math.min(1, Number(value || 0)));
+
+  node.innerHTML = `
+    <div class="legend">
+      <span><i style="background:var(--cream)"></i>Total Spread Time / Target</span>
+      <span><i style="background:var(--purple)"></i>Machine Utilization</span>
+      <span><i style="background:var(--blue)"></i>Total Spread (Y) / Target</span>
+      <span><i style="background:var(--orange)"></i>Output Completion</span>
+    </div>
+    <svg viewBox="0 0 ${width} ${height}" role="img">
+      <line x1="${pad.left}" y1="${pad.top + plotH}" x2="${width - pad.right}" y2="${pad.top + plotH}" stroke="#c6ced8" />
+      <line x1="${pad.left}" y1="${pad.top}" x2="${pad.left}" y2="${pad.top + plotH}" stroke="#c6ced8" />
+      <text x="8" y="${pad.top + 8}" fill="#667282" font-size="12">${config.leftAxis}</text>
+      <text x="${width - pad.right + 8}" y="${pad.top + 8}" fill="#667282" font-size="12">100%</text>
+      ${[0.2, 0.4, 0.6, 0.8, 1].map((r) => `<line x1="${pad.left}" y1="${pad.top + plotH - r * plotH}" x2="${width - pad.right}" y2="${pad.top + plotH - r * plotH}" stroke="#d8dee6" stroke-dasharray="2 5" />`).join("")}
+      ${data
+        .map((d, i) => {
+          const start = groupStart(i);
+          const timePct = clampPct(d.utilization);
+          const yardsPct = clampPct(d.efficiency);
+          const timeH = plotH * timePct;
+          const yardsH = plotH * yardsPct;
+          const timeX = start;
+          const yardsX = start + pairW + pairGap;
+          const groupCenter = start + groupWidth / 2;
+          const timeLabelY = Math.max(pad.top + 11, pad.top + plotH - timeH - 8);
+          const yardsLabelY = Math.max(pad.top + 11, pad.top + plotH - yardsH - 8);
+          const tooltip = `${d.table} | Total Spread Time: ${fmt.number(d.runningMinutes, 0)} min | Target Spread Time: ${fmt.number(d.actualHours * 60, 0)} min | Machine Utilization: ${fmt.pct(d.utilization)} | Total Spread (Y): ${fmt.number(d.yards, 0)} | Target Spread (Y): ${fmt.number(d.target, 0)} | Output Completion: ${fmt.pct(d.efficiency)}`;
+          return `<g class="chart-item ${selectionClass(config.filterType, d.label)}" data-clickable="true" data-filter-type="${config.filterType}" data-filter-key="${d.label}">
+            <title>${escapeHtml(tooltip)}</title>
+            <rect x="${timeX}" y="${pad.top}" width="${pairW}" height="${plotH}" rx="3" fill="var(--cream)" opacity=".96" />
+            <rect x="${timeX}" y="${pad.top + plotH - timeH}" width="${pairW}" height="${timeH}" rx="3" fill="var(--purple)" opacity=".86" />
+            <rect x="${timeX}" y="${pad.top + plotH - Math.max(4, timeH * 0.22)}" width="${pairW}" height="${Math.max(4, timeH * 0.22)}" rx="2" fill="white" opacity=".18" />
+            <text class="chart-value chart-line-value" x="${timeX + pairW / 2}" y="${timeLabelY}" text-anchor="middle" font-size="${valueFontSize}" font-weight="${valueWeight}" fill="var(--purple)">${fmt.pct(d.utilization)}</text>
+            <text class="chart-label" x="${timeX + pairW / 2}" y="${pad.top + plotH + 16}" text-anchor="middle" font-size="10" font-weight="700" fill="#6f8192">Time</text>
+            <rect x="${yardsX}" y="${pad.top}" width="${pairW}" height="${plotH}" rx="3" fill="#dce9fb" opacity=".96" />
+            <rect x="${yardsX}" y="${pad.top + plotH - yardsH}" width="${pairW}" height="${yardsH}" rx="3" fill="var(--blue)" opacity=".9" />
+            <rect x="${yardsX}" y="${pad.top + plotH - Math.max(4, yardsH * 0.18)}" width="${pairW}" height="${Math.max(4, yardsH * 0.18)}" rx="2" fill="white" opacity=".16" />
+            <text class="chart-value chart-line-value" x="${yardsX + pairW / 2}" y="${yardsLabelY}" text-anchor="middle" font-size="${valueFontSize}" font-weight="${valueWeight}" fill="var(--orange)">${fmt.pct(d.efficiency)}</text>
+            <text class="chart-label" x="${yardsX + pairW / 2}" y="${pad.top + plotH + 16}" text-anchor="middle" font-size="10" font-weight="700" fill="#6f8192">Yards</text>
+            <text class="chart-label" x="${groupCenter}" y="${xLabelY}" text-anchor="middle" font-size="${labelFontSize}" font-weight="${labelWeight}" fill="${labelColor}">${d.label}</text>
+          </g>`;
+        })
+        .join("")}
+    </svg>`;
+
+  node.querySelectorAll("[data-clickable='true']").forEach((item) => {
+    item.addEventListener("click", () => toggleChartFilter(item.dataset.filterType, item.dataset.filterKey));
+  });
+}
+
 function renderVarianceChart(detail) {
   const data = [...groupBy(detail, (row) => row.roll).entries()]
     .map(([roll, rows]) => ({ label: roll, value: rows.reduce((acc, row) => acc + row.varianceYard, 0) }))
@@ -1125,18 +1198,11 @@ function render() {
     bars: [{ key: "yards", label: "Total Yards (Spread)", color: "var(--blue)", format: (v) => fmt.number(v, 0) }],
     lines: [{ key: "pct", label: "EFF %", color: "var(--red)", labelDy: 18, labelDx: 0 }],
   });
-  renderComboChart(el.machineChart, aggregateMachine(values.machine), {
+  renderMergedPairChart(el.machineChart, aggregateMachine(values.machine), {
     filterType: "spreadingTable",
-    filterKey: (row) => row.label,
     leftAxis: "Minutes / Yards",
-    bars: [
-      { key: "minutes", label: "Total Spread Time (minutes)", color: "var(--cream)", format: (v) => fmt.number(v, 0) },
-      { key: "yards", label: "Total Spread (Y)", color: "var(--blue)", format: (v) => fmt.number(v, 0) },
-    ],
-    lines: [
-      { key: "completion", label: "Output completion", color: "var(--orange)", anchorBarIndex: 1, labelDy: -12, labelDx: 0 },
-      { key: "utilization", label: "machine utilization", color: "var(--purple)", anchorBarIndex: 0, labelDy: 18, labelDx: 0 },
-    ],
+    labelFontSize: 9,
+    valueFontSize: 9,
   });
   renderVarianceChart(detail);
   renderDetailTable(detail, values.spreaderRecords);

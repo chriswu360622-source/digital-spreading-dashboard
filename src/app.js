@@ -172,7 +172,6 @@ const el = {
   endDate: document.querySelector("#endDate"),
   statusSelect: document.querySelector("#statusSelect"),
   tableButtons: document.querySelector("#tableButtons"),
-  hourlyTarget: document.querySelector("#hourlyTarget"),
   kpiGrid: document.querySelector("#kpiGrid"),
   spreaderChart: document.querySelector("#spreaderChart"),
   machineChart: document.querySelector("#machineChart"),
@@ -668,9 +667,16 @@ function metrics(summary, detail) {
 function renderKpis(values) {
   el.kpiGrid.innerHTML = kpiSpecs
     .map(
-      (item) => `<article class="kpi ${state.kpiFocus === item.key ? "selected" : ""}" data-kpi-key="${item.key}">
+      (item) => `<article class="kpi ${item.key === "hourlyTarget" ? "editable" : ""} ${state.kpiFocus === item.key ? "selected" : ""}" data-kpi-key="${item.key}">
         <h3>${item.label}</h3>
-        <strong>${kpiValue(values, item.key)}</strong>
+        ${
+          item.key === "hourlyTarget"
+            ? `<div class="kpi-input-wrap">
+                <input id="hourlyTarget" type="number" min="1" step="1" value="${state.hourlyTarget}" />
+                <span>yard/h</span>
+              </div>`
+            : `<strong>${kpiValue(values, item.key)}</strong>`
+        }
       </article>`,
     )
     .join("");
@@ -1232,6 +1238,13 @@ function render() {
   renderDetailTable(detail, values.spreaderRecords);
   renderKpiDrill(detail, values);
 
+  const factoryTables = unique(raw.summary.filter((row) => row.factory === state.factory).map((row) => row.spreadingTable)).sort(tableSort);
+  if (state.tableFilter && !factoryTables.includes(state.tableFilter)) {
+    state.tableFilter = null;
+  }
+  el.tableButtons.innerHTML = factoryTables.map((table) => `<button class="active" type="button" data-table="${table}">${table}</button>`).join("");
+  state.tables = new Set(factoryTables);
+
   el.tableButtons.querySelectorAll("button[data-table]").forEach((button) => {
     button.classList.toggle("active", !state.tableFilter || button.dataset.table === state.tableFilter);
   });
@@ -1268,7 +1281,7 @@ function initFilters() {
     .map((factory) => `<button class="${factory === state.factory ? "active" : ""}" type="button" data-factory="${factory}">${factory}</button>`)
     .join("");
 
-  const tables = unique(raw.summary.map((row) => row.spreadingTable)).sort(tableSort);
+  const tables = unique(raw.summary.filter((row) => row.factory === state.factory).map((row) => row.spreadingTable)).sort(tableSort);
   el.tableButtons.innerHTML = tables.map((table) => `<button class="active" type="button" data-table="${table}">${table}</button>`).join("");
   state.tables = new Set(tables);
 }
@@ -1339,8 +1352,9 @@ function wireEvents() {
     state.factory = button.dataset.factory;
     render();
   });
-  el.hourlyTarget.addEventListener("input", () => {
-    state.hourlyTarget = Math.max(1, Number(el.hourlyTarget.value || raw.defaults.hourlyTarget));
+  el.kpiGrid.addEventListener("input", (event) => {
+    if (event.target?.id !== "hourlyTarget") return;
+    state.hourlyTarget = Math.max(1, Number(event.target.value || raw.defaults.hourlyTarget));
     render();
   });
   el.tableButtons.addEventListener("click", (event) => {

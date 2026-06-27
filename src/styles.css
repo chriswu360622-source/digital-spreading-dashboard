@@ -257,6 +257,37 @@ select {
   font-weight: 650;
 }
 
+.kpi.editable {
+  cursor: default;
+}
+
+.kpi.editable .kpi-input-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 33px;
+  padding: 6px 6px 5px;
+}
+
+.kpi.editable input {
+  width: 70px;
+  height: 28px;
+  border: 1px solid #bec9d3;
+  background: white;
+  padding: 0 8px;
+  color: var(--ink);
+  text-align: right;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.kpi.editable span {
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
 .kpi:hover {
   background: #f7fbff;
 }

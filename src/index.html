@@ -17,16 +17,16 @@
       </header>
 
       <section class="control-band">
-        <div class="control-group factory-group">
-          <span class="control-label">Factory</span>
-          <div id="factoryButtons" class="segmented segmented-tight"></div>
-        </div>
         <div class="control-group date-group">
           <span class="control-label">Spreading Date</span>
           <div class="control-row">
             <input id="startDate" type="date" />
             <input id="endDate" type="date" />
           </div>
+        </div>
+        <div class="control-group factory-group">
+          <span class="control-label">Factory</span>
+          <div id="factoryButtons" class="segmented segmented-tight"></div>
         </div>
         <div class="control-group table-group">
           <span class="control-label">Spreading Table</span>
@@ -35,13 +35,6 @@
         <div class="control-group status-group">
           <span class="control-label">Spreading Status</span>
           <select id="statusSelect"></select>
-        </div>
-        <div class="control-group target-group">
-          <span class="control-label">Hourly Target</span>
-          <div class="target-input">
-            <input id="hourlyTarget" type="number" min="1" step="1" value="450" />
-            <span>yard/h</span>
-          </div>
         </div>
       </section>
 

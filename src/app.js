@@ -693,8 +693,12 @@ function aggregateMachine(records) {
     .map(([table, rows]) => ({
       label: table,
       minutes: rows.reduce((acc, row) => acc + row.runningMinutes, 0),
+      runningMinutes: rows.reduce((acc, row) => acc + row.runningMinutes, 0),
       yards: rows.reduce((acc, row) => acc + row.yards, 0),
+      actualHours: rows[0]?.actualHours || 0,
+      target: rows[0]?.target || 0,
       completion: average(rows.map((row) => row.efficiency)),
+      efficiency: average(rows.map((row) => row.efficiency)),
       utilization: average(rows.map((row) => row.utilization)),
     }))
     .sort((a, b) => tableSort(a.label, b.label));
@@ -862,12 +866,14 @@ function renderMergedPairChart(node, data, config) {
   const plotH = height - pad.top - pad.bottom;
   const groupW = plotW / Math.max(data.length, 1);
   const pairW = Math.min(28, Math.max(18, (groupW - 16) / 3));
-  const pairGap = Math.min(6, Math.max(4, (groupW - pairW * 2) / 2));
+  const pairGap = Math.min(4, Math.max(3, (groupW - pairW * 2) / 2));
   const groupWidth = pairW * 2 + pairGap;
   const groupStart = (i) => pad.left + i * groupW + (groupW - groupWidth) / 2;
   const clampPct = (value) => Math.max(0, Math.min(1, Number(value || 0)));
 
+  node.style.position = "relative";
   node.innerHTML = `
+    <div class="merged-hover-card merged-hover-overlay" style="display:none; position:absolute; top:14px; left:14px; z-index:2; pointer-events:none;"></div>
     <div class="legend">
       <span><i style="background:var(--cream)"></i>Total Spread Time / Target</span>
       <span><i style="background:var(--purple)"></i>Machine Utilization</span>
@@ -882,8 +888,12 @@ function renderMergedPairChart(node, data, config) {
       ${data
         .map((d, i) => {
           const start = groupStart(i);
+          const timeMinutes = Number(d.runningMinutes ?? d.minutes ?? 0);
+          const targetMinutes = Number((d.actualHours || 0) * 60);
           const timePct = clampPct(d.utilization);
-          const yardsPct = clampPct(d.efficiency);
+          const yardsPct = clampPct(d.efficiency ?? d.completion);
+          const totalYards = Number(d.yards ?? 0);
+          const targetYards = Number(d.target ?? 0);
           const timeH = plotH * timePct;
           const yardsH = plotH * yardsPct;
           const timeX = start;
@@ -891,29 +901,41 @@ function renderMergedPairChart(node, data, config) {
           const groupCenter = start + groupWidth / 2;
           const timeLabelY = Math.max(pad.top + 11, pad.top + plotH - timeH - 8);
           const yardsLabelY = Math.max(pad.top + 11, pad.top + plotH - yardsH - 8);
-          const timeValueY = Math.min(pad.top + plotH - 4, pad.top + plotH - timeH + 14);
-          const yardsValueY = Math.min(pad.top + plotH - 4, pad.top + plotH - yardsH + 14);
           const groupLabelY = pad.top + plotH + 18;
-          const tooltip = `${d.table} | Total Spread Time: ${fmt.number(d.runningMinutes, 0)} min | Target Spread Time: ${fmt.number(d.actualHours * 60, 0)} min | Machine Utilization: ${fmt.pct(d.utilization)} | Total Spread (Y): ${fmt.number(d.yards, 0)} | Target Spread (Y): ${fmt.number(d.target, 0)} | Output Completion: ${fmt.pct(d.efficiency)}`;
-          return `<g class="chart-item ${selectionClass(config.filterType, d.label)}" data-clickable="true" data-filter-type="${config.filterType}" data-filter-key="${d.label}">
-            <title>${escapeHtml(tooltip)}</title>
+          return `<g class="chart-item ${selectionClass(config.filterType, d.label)}" data-clickable="true" data-filter-type="${config.filterType}" data-filter-key="${d.label}" data-running-minutes="${timeMinutes}" data-actual-hours="${Number(d.actualHours || 0)}" data-yards="${totalYards}" data-target="${targetYards}" data-utilization="${Number(d.utilization || 0)}" data-efficiency="${Number(d.efficiency || d.completion || 0)}">
             <rect x="${timeX}" y="${pad.top}" width="${pairW}" height="${plotH}" rx="3" fill="var(--cream)" opacity=".96" />
             <rect x="${timeX}" y="${pad.top + plotH - timeH}" width="${pairW}" height="${timeH}" rx="3" fill="var(--purple)" opacity=".86" />
             <rect x="${timeX}" y="${pad.top + plotH - Math.max(4, timeH * 0.22)}" width="${pairW}" height="${Math.max(4, timeH * 0.22)}" rx="2" fill="white" opacity=".18" />
             <text class="chart-value chart-line-value" x="${timeX + pairW / 2}" y="${timeLabelY}" text-anchor="middle" font-size="${valueFontSize}" font-weight="${valueWeight}" fill="var(--purple)">${fmt.pct(d.utilization)}</text>
-            <text class="chart-value chart-line-value" x="${timeX + pairW / 2}" y="${timeValueY}" text-anchor="middle" font-size="${Math.max(7, valueFontSize - 1)}" font-weight="700" fill="#243040">${fmt.number(d.runningMinutes, 0)} min</text>
             <rect x="${yardsX}" y="${pad.top}" width="${pairW}" height="${plotH}" rx="3" fill="#dce9fb" opacity=".96" />
             <rect x="${yardsX}" y="${pad.top + plotH - yardsH}" width="${pairW}" height="${yardsH}" rx="3" fill="var(--blue)" opacity=".9" />
             <rect x="${yardsX}" y="${pad.top + plotH - Math.max(4, yardsH * 0.18)}" width="${pairW}" height="${Math.max(4, yardsH * 0.18)}" rx="2" fill="white" opacity=".16" />
             <text class="chart-value chart-line-value" x="${yardsX + pairW / 2}" y="${yardsLabelY}" text-anchor="middle" font-size="${valueFontSize}" font-weight="${valueWeight}" fill="var(--orange)">${fmt.pct(d.efficiency)}</text>
-            <text class="chart-value chart-line-value" x="${yardsX + pairW / 2}" y="${yardsValueY}" text-anchor="middle" font-size="${Math.max(7, valueFontSize - 1)}" font-weight="700" fill="#243040">${fmt.number(d.yards, 0)}</text>
             ${axisLabelLayout({ label: d.label, x: groupCenter, baselineY: groupLabelY, groupWidth: groupW, fontSize: 8.2, force: "vertical" })}
           </g>`;
         })
         .join("")}
     </svg>`;
 
-  node.querySelectorAll("[data-clickable='true']").forEach((item) => {
+  const items = [...node.querySelectorAll("[data-clickable='true']")];
+  const hoverOverlay = node.querySelector(".merged-hover-overlay");
+  items.forEach((item) => {
+    item.addEventListener("mouseenter", () => {
+      const d = item.dataset;
+      hoverOverlay.innerHTML = `
+        <div class="merged-hover-title">${escapeHtml(d.filterKey)} preview</div>
+        <div class="merged-hover-row"><span>Total Spread Time</span><b>${fmt.number(Number(d.runningMinutes || 0), 0)} min</b></div>
+        <div class="merged-hover-row"><span>Target Spread Time</span><b>${fmt.number(Number((d.actualHours || 0) * 60), 0)} min</b></div>
+        <div class="merged-hover-row"><span>Machine Utilization</span><b>${fmt.pct(Number(d.utilization || 0))}</b></div>
+        <div class="merged-hover-gap"></div>
+        <div class="merged-hover-row"><span>Total Spread (Y)</span><b>${fmt.number(Number(d.yards || 0), 0)}</b></div>
+        <div class="merged-hover-row"><span>Target Spread (Y)</span><b>${fmt.number(Number(d.target || 0), 0)}</b></div>
+        <div class="merged-hover-row"><span>Output Completion</span><b>${fmt.pct(Number(d.efficiency || 0))}</b></div>`;
+      hoverOverlay.style.display = "block";
+    });
+    item.addEventListener("mouseleave", () => {
+      hoverOverlay.style.display = "none";
+    });
     item.addEventListener("click", () => toggleChartFilter(item.dataset.filterType, item.dataset.filterKey));
   });
 }

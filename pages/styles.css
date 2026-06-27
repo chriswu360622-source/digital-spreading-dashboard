@@ -510,6 +510,55 @@ body.modal-open {
   fill: #243444;
 }
 
+.merged-hover {
+  overflow: visible;
+}
+
+.merged-hover-card {
+  width: 250px;
+  background: #ffffff;
+  border: 1px solid #c9d3df;
+  border-left: 4px solid #7b1fa2;
+  border-radius: 7px;
+  box-shadow: 0 8px 24px rgba(28, 45, 65, 0.14);
+  padding: 12px 14px 13px;
+  color: #1f3041;
+  font-size: 11px;
+  line-height: 1.28;
+}
+
+.merged-hover-title {
+  font-size: 13px;
+  font-weight: 800;
+  margin-bottom: 6px;
+  color: #102436;
+}
+
+.merged-hover-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0;
+}
+
+.merged-hover-row + .merged-hover-row {
+  margin-top: 2px;
+}
+
+.merged-hover-row span {
+  color: #243444;
+  font-weight: 500;
+}
+
+.merged-hover-row b {
+  color: #1d2f41;
+  font-weight: 700;
+}
+
+.merged-hover-gap {
+  height: 8px;
+}
+
 .drill-axis-label tspan:first-child {
   fill: #243444;
   font-size: 8px;

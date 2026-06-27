@@ -17,18 +17,15 @@ OUTPUT_JS = ROOT / "data" / "dashboard-data.js"
 
 
 def find_source_workbook() -> Path:
-    named = SOURCE_DIR / "Digital Spreading R.16-Database.xlsx"
-    if named.exists():
-        return named
     candidates = [
         path
-        for path in SOURCE_DIR.glob("*.xlsx")
+        for path in SOURCE_DIR.rglob("*.xlsx")
         if path.is_file() and not path.name.startswith("~$")
     ]
     if candidates:
         return max(candidates, key=lambda path: path.stat().st_mtime)
     raise FileNotFoundError(
-        f"No Excel workbook found in {SOURCE_DIR}. Place a .xlsx file there or name it Digital Spreading R.16-Database.xlsx."
+        f"No Excel workbook found in {SOURCE_DIR}. Place a .xlsx file there."
     )
 
 

@@ -23,6 +23,24 @@ python scripts\start_dashboard.py
 
 That script serves the dashboard on `http://127.0.0.1:4174/src/index.html` and watches the input folder for new Excel files. It also prints the LAN URL for other computers on the same network.
 
+## Raw Data Folder
+
+Place the Excel source files in `C:\Users\kobe1\Desktop\AI Dashboard\Digital Spreading Dashboard Input\`.
+
+The dashboard rebuild now scans that folder recursively, so you can either overwrite the existing workbook or drop a newer `.xlsx` file into a subfolder such as `excel_source`.
+
+Use the desktop shortcut `Digital Spreading Dashboard Input` to open the folder quickly.
+
+## Refresh And Publish
+
+To rebuild the local dashboard bundle and push the generated `data/` and `pages/` files to GitHub Pages, run:
+
+```powershell
+python scripts\refresh_dashboard.py
+```
+
+You can also use the desktop shortcut `Digital Spreading Dashboard Refresh`.
+
 ## GitHub Pages
 
 To generate a GitHub Pages-ready bundle, run:

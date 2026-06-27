@@ -6,6 +6,7 @@ import subprocess
 import sys
 import threading
 import time
+import webbrowser
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -44,11 +45,17 @@ def run_build() -> None:
     subprocess.run([str(python_exe), str(BUILD_SCRIPT)], cwd=ROOT, check=True)
 
 
+def port_is_open(host: str, port: int) -> bool:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.settimeout(0.25)
+        return sock.connect_ex((host, port)) == 0
+
+
 def snapshot_excel_files() -> dict[str, int]:
     files: dict[str, int] = {}
     if not INPUT_DIR.exists():
         return files
-    for path in INPUT_DIR.glob("*.xlsx"):
+    for path in INPUT_DIR.rglob("*.xlsx"):
         if path.name.startswith("~$") or not path.is_file():
             continue
         files[str(path)] = path.stat().st_mtime_ns
@@ -72,6 +79,15 @@ def watch_input_folder(stop_event: threading.Event) -> None:
 
 def main() -> int:
     os.chdir(ROOT)
+    local_url = f"http://127.0.0.1:{PORT}/src/index.html"
+    if port_is_open("127.0.0.1", PORT):
+        try:
+            webbrowser.open(local_url, new=1, autoraise=True)
+        except Exception:
+            pass
+        print(f"Dashboard already running at: {local_url}")
+        return 0
+
     print("Building dashboard data...")
     run_build()
 
@@ -97,10 +113,15 @@ def main() -> int:
     )
     write_url_file(DESKTOP / "Digital Spreading Dashboard Local.url", f"http://127.0.0.1:{PORT}/src/index.html")
     write_url_file(DESKTOP / "Digital Spreading Dashboard LAN.url", f"http://{lan_ip}:{PORT}/src/index.html")
-    print(f"Dashboard running at: http://127.0.0.1:{PORT}/src/index.html")
+    print(f"Dashboard running at: {local_url}")
     print(f"LAN access URL:      http://{lan_ip}:{PORT}/src/index.html")
     print(f"Watching: {INPUT_DIR}")
     print("Press Ctrl+C to stop.")
+
+    try:
+        webbrowser.open(local_url, new=1, autoraise=True)
+    except Exception:
+        pass
 
     try:
         server.serve_forever()

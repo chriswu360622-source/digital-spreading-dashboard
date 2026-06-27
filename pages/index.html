@@ -17,6 +17,10 @@
       </header>
 
       <section class="control-band">
+        <div class="control-group factory-group">
+          <span class="control-label">Factory</span>
+          <div id="factoryButtons" class="segmented segmented-tight"></div>
+        </div>
         <div class="control-group date-group">
           <span class="control-label">Spreading Date</span>
           <div class="control-row">
@@ -28,7 +32,7 @@
           <span class="control-label">Spreading Table</span>
           <div id="tableButtons" class="segmented"></div>
         </div>
-        <div class="control-group">
+        <div class="control-group status-group">
           <span class="control-label">Spreading Status</span>
           <select id="statusSelect"></select>
         </div>
@@ -180,8 +184,8 @@
           if (onload) script.onload = onload;
           document.body.appendChild(script);
         };
-        const base = window.location.pathname.endsWith("/src/index.html") ? "../" : "./";
-        loadScript(`${base}data/dashboard-data.js`, () => loadScript(`${base}app.js`));
+        const dataBase = window.location.pathname.endsWith("/src/index.html") ? "../" : "./";
+        loadScript(`${dataBase}data/dashboard-data.js`, () => loadScript("./app.js"));
       })();
     </script>
   </body>

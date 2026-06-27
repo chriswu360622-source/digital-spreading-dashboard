@@ -1,10 +1,12 @@
 const raw = window.DIGITAL_SPREADING_DATA;
 
 const state = {
+  factory: "ALA",
   startDate: "",
   endDate: "",
   status: raw.defaults.defaultStatus,
   hourlyTarget: raw.defaults.hourlyTarget,
+  factories: new Set(),
   tables: new Set(),
   tableFilter: null,
   chartFilter: null,
@@ -165,6 +167,7 @@ const el = {
   helpDialog: document.querySelector("#helpDialog"),
   helpCloseButton: document.querySelector("#helpCloseButton"),
   helpDialogBody: document.querySelector("#helpDialogBody"),
+  factoryButtons: document.querySelector("#factoryButtons"),
   startDate: document.querySelector("#startDate"),
   endDate: document.querySelector("#endDate"),
   statusSelect: document.querySelector("#statusSelect"),
@@ -243,6 +246,10 @@ const helpSpec = {
     {
       title: "Hourly Target",
       description: "Editable target used in all efficiency and utilization calculations, default 450 yard/h.",
+    },
+    {
+      title: "Factory",
+      description: "Top-level filter for factory selection. The dashboard defaults to ALA and updates all charts, cards, and tables when changed.",
     },
     {
       title: "Machine Utilization chart",
@@ -577,8 +584,9 @@ function selectionMatches(row, filter, spreaderRecords) {
 
 function filteredData() {
   let summary = raw.summary.filter((row) => {
+    const factoryOk = !state.factory || row.factory === state.factory;
     const tableOk = !state.tableFilter || row.spreadingTable === state.tableFilter;
-    return dateInRange(activityDate(row)) && row.status === state.status && tableOk;
+    return factoryOk && dateInRange(activityDate(row)) && row.status === state.status && tableOk;
   });
   const cutRefs = new Set(summary.map((row) => row.cutRef));
   let detail = raw.detail.filter((row) => cutRefs.has(row.cutRef));
@@ -1128,6 +1136,9 @@ function render() {
   el.tableButtons.querySelectorAll("button[data-table]").forEach((button) => {
     button.classList.toggle("active", !state.tableFilter || button.dataset.table === state.tableFilter);
   });
+  el.factoryButtons.querySelectorAll("button[data-factory]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.factory === state.factory);
+  });
 }
 
 function initFilters() {
@@ -1151,6 +1162,12 @@ function initFilters() {
   const statuses = unique(raw.summary.map((row) => row.status));
   el.statusSelect.innerHTML = statuses.map((status) => `<option value="${status}">${status}</option>`).join("");
   el.statusSelect.value = state.status;
+
+  const factoryOrder = ["VT1", "GMM", "ALA"];
+  state.factories = new Set([...factoryOrder, ...unique(raw.summary.map((row) => row.factory))]);
+  el.factoryButtons.innerHTML = [...state.factories]
+    .map((factory) => `<button class="${factory === state.factory ? "active" : ""}" type="button" data-factory="${factory}">${factory}</button>`)
+    .join("");
 
   const tables = unique(raw.summary.map((row) => row.spreadingTable)).sort(tableSort);
   el.tableButtons.innerHTML = tables.map((table) => `<button class="active" type="button" data-table="${table}">${table}</button>`).join("");
@@ -1215,6 +1232,12 @@ function wireEvents() {
   });
   el.statusSelect.addEventListener("change", () => {
     state.status = el.statusSelect.value;
+    render();
+  });
+  el.factoryButtons.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-factory]");
+    if (!button) return;
+    state.factory = button.dataset.factory;
     render();
   });
   el.hourlyTarget.addEventListener("input", () => {

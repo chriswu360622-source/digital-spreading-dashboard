@@ -101,7 +101,7 @@ select {
 
 .control-band {
   display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
+  grid-template-columns: repeat(9, minmax(0, 1fr));
   gap: 1px;
   padding: 1px 1px 0;
   background: var(--line);
@@ -120,11 +120,15 @@ select {
   grid-column: span 4;
 }
 
-.control-group:nth-of-type(3) {
+.status-group {
   grid-column: span 1;
 }
 
 .target-group {
+  grid-column: span 1;
+}
+
+.factory-group {
   grid-column: span 1;
 }
 
@@ -188,6 +192,12 @@ select {
   flex-wrap: wrap;
   align-content: flex-start;
   min-height: 58px;
+}
+
+.segmented-tight {
+  min-height: 46px;
+  padding-top: 5px;
+  padding-bottom: 6px;
 }
 
 .segmented button {
@@ -780,15 +790,19 @@ tbody tr:nth-child(even) {
   }
 
   .control-band {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(7, minmax(0, 1fr));
     gap: 1px;
   }
 
   .date-group,
   .table-group,
-  .control-group:nth-of-type(3),
+  .status-group,
   .target-group {
     grid-column: span 2;
+  }
+
+  .factory-group {
+    grid-column: span 1;
   }
 
   .kpi-grid {
@@ -822,8 +836,12 @@ tbody tr:nth-child(even) {
 
   .date-group,
   .table-group,
-  .control-group:nth-of-type(3),
+  .status-group,
   .target-group {
+    grid-column: auto;
+  }
+
+  .factory-group {
     grid-column: auto;
   }
 

@@ -862,7 +862,7 @@ function renderMergedPairChart(node, data, config) {
   const plotH = height - pad.top - pad.bottom;
   const groupW = plotW / Math.max(data.length, 1);
   const pairW = Math.min(28, Math.max(18, (groupW - 16) / 3));
-  const pairGap = Math.max(8, (groupW - pairW * 2) / 2);
+  const pairGap = Math.min(6, Math.max(4, (groupW - pairW * 2) / 2));
   const groupWidth = pairW * 2 + pairGap;
   const groupStart = (i) => pad.left + i * groupW + (groupW - groupWidth) / 2;
   const clampPct = (value) => Math.max(0, Math.min(1, Number(value || 0)));
@@ -891,8 +891,8 @@ function renderMergedPairChart(node, data, config) {
           const groupCenter = start + groupWidth / 2;
           const timeLabelY = Math.max(pad.top + 11, pad.top + plotH - timeH - 8);
           const yardsLabelY = Math.max(pad.top + 11, pad.top + plotH - yardsH - 8);
-          const timeValueY = timeH > 28 ? pad.top + plotH - timeH / 2 + 4 : Math.max(pad.top + 12, pad.top + plotH - timeH - 22);
-          const yardsValueY = yardsH > 28 ? pad.top + plotH - yardsH / 2 + 4 : Math.max(pad.top + 12, pad.top + plotH - yardsH - 22);
+          const timeValueY = Math.min(pad.top + plotH - 4, pad.top + plotH - timeH + 14);
+          const yardsValueY = Math.min(pad.top + plotH - 4, pad.top + plotH - yardsH + 14);
           const groupLabelY = pad.top + plotH + 18;
           const tooltip = `${d.table} | Total Spread Time: ${fmt.number(d.runningMinutes, 0)} min | Target Spread Time: ${fmt.number(d.actualHours * 60, 0)} min | Machine Utilization: ${fmt.pct(d.utilization)} | Total Spread (Y): ${fmt.number(d.yards, 0)} | Target Spread (Y): ${fmt.number(d.target, 0)} | Output Completion: ${fmt.pct(d.efficiency)}`;
           return `<g class="chart-item ${selectionClass(config.filterType, d.label)}" data-clickable="true" data-filter-type="${config.filterType}" data-filter-key="${d.label}">

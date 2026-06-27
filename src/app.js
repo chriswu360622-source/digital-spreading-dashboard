@@ -769,11 +769,20 @@ function renderComboChart(node, data, config) {
   const pctMax = Math.max(1, ...data.flatMap((d) => config.lines.map((line) => d[line.key])));
   const groupW = plotW / Math.max(data.length, 1);
   const barW = Math.min(34, (groupW - 12) / config.bars.length);
+  const groupStart = (i) => pad.left + i * groupW + (groupW - barW * config.bars.length) / 2;
+  const lineX = (line, i) => {
+    const start = groupStart(i);
+    if (Number.isInteger(line.anchorBarIndex) && config.bars[line.anchorBarIndex]) {
+      return start + line.anchorBarIndex * barW + barW / 2;
+    }
+    return pad.left + i * groupW + groupW / 2;
+  };
+  const lineY = (line, d) => pad.top + plotH - (d[line.key] / pctMax) * plotH;
   const points = (line) =>
     data
       .map((d, i) => {
-        const x = pad.left + i * groupW + groupW / 2;
-        const y = pad.top + plotH - (d[line.key] / pctMax) * plotH;
+        const x = lineX(line, i);
+        const y = lineY(line, d);
         return `${x},${y}`;
       })
       .join(" ");
@@ -791,7 +800,7 @@ function renderComboChart(node, data, config) {
       ${[0.5, 1].map((r) => `<line x1="${pad.left}" y1="${pad.top + plotH - r * plotH}" x2="${width - pad.right}" y2="${pad.top + plotH - r * plotH}" stroke="#d8dee6" stroke-dasharray="2 5" />`).join("")}
       ${data
         .map((d, i) => {
-          const start = pad.left + i * groupW + (groupW - barW * config.bars.length) / 2;
+          const start = groupStart(i);
           const filterKey = config.filterKey ? config.filterKey(d) : d.label;
           return `<g class="chart-item ${selectionClass(config.filterType, filterKey)}" data-clickable="true" data-filter-type="${config.filterType}" data-filter-key="${filterKey}">
       ${config.bars
@@ -812,8 +821,8 @@ function renderComboChart(node, data, config) {
         .map((line) => `<polyline points="${points(line)}" fill="none" stroke="${line.color}" stroke-width="3" />
           ${data
             .map((d, i) => {
-              const x = pad.left + i * groupW + groupW / 2;
-              const y = pad.top + plotH - (d[line.key] / pctMax) * plotH;
+              const x = lineX(line, i);
+              const y = lineY(line, d);
               const filterKey = config.filterKey ? config.filterKey(d) : d.label;
               const labelDy = line.labelDy ?? chartStyle.lineLabelDy?.[line.key] ?? (line.key === "utilization" ? 42 : -30);
               const labelDx = line.labelDx ?? 0;
@@ -1114,7 +1123,7 @@ function render() {
     filterType: "spreader",
     leftAxis: "Yards",
     bars: [{ key: "yards", label: "Total Yards (Spread)", color: "var(--blue)", format: (v) => fmt.number(v, 0) }],
-    lines: [{ key: "pct", label: "EFF %", color: "var(--red)", labelDy: -28, labelDx: 14 }],
+    lines: [{ key: "pct", label: "EFF %", color: "var(--red)", labelDy: 18, labelDx: 0 }],
   });
   renderComboChart(el.machineChart, aggregateMachine(values.machine), {
     filterType: "spreadingTable",
@@ -1125,8 +1134,8 @@ function render() {
       { key: "yards", label: "Total Spread (Y)", color: "var(--blue)", format: (v) => fmt.number(v, 0) },
     ],
     lines: [
-      { key: "completion", label: "Output completion", color: "var(--orange)", labelDy: -44, labelDx: -16 },
-      { key: "utilization", label: "machine utilization", color: "var(--purple)", labelDy: 50, labelDx: 16 },
+      { key: "completion", label: "Output completion", color: "var(--orange)", anchorBarIndex: 1, labelDy: -12, labelDx: 0 },
+      { key: "utilization", label: "machine utilization", color: "var(--purple)", anchorBarIndex: 0, labelDy: 18, labelDx: 0 },
     ],
   });
   renderVarianceChart(detail);

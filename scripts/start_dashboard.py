@@ -7,6 +7,7 @@ import sys
 import threading
 import time
 import webbrowser
+import shutil
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -16,15 +17,23 @@ ROOT = Path(__file__).resolve().parents[1]
 WORKSPACE = ROOT.parents[1]
 INPUT_DIR = WORKSPACE / "Digital Spreading Dashboard Input"
 BUILD_SCRIPT = ROOT / "scripts" / "build_data.py"
+BUILD_PAGES_SCRIPT = ROOT / "scripts" / "build_pages.py"
 PORT = int(os.environ.get("DASHBOARD_PORT", "4174"))
 INFO_FILE = ROOT / "assets" / "live-access.txt"
 DESKTOP = Path.home() / "Desktop"
+PUBLIC_WORKTREE = WORKSPACE / "work" / "gh-pages-deploy"
 RUNTIME_PYTHON = Path(
     os.environ.get(
         "CODEX_RUNTIME_PYTHON",
         r"C:\Users\kobe1\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe",
     )
 )
+GIT_CANDIDATES = [
+    Path(r"C:\Users\kobe1\AppData\Local\GitHubDesktop\app-3.6.1\resources\app\git\cmd\git.exe"),
+    Path(r"C:\Users\kobe1\AppData\Local\GitHubDesktop\app-3.6.1\resources\app\git\mingw64\bin\git.exe"),
+    Path(r"C:\Users\kobe1\AppData\Local\GitHubDesktop\app-3.5.12\resources\app\git\cmd\git.exe"),
+    Path(r"C:\Users\kobe1\AppData\Local\GitHubDesktop\app-3.5.12\resources\app\git\mingw64\bin\git.exe"),
+]
 
 
 def get_lan_ip() -> str:
@@ -43,6 +52,50 @@ def write_url_file(path: Path, url: str) -> None:
 def run_build() -> None:
     python_exe = RUNTIME_PYTHON if RUNTIME_PYTHON.exists() else Path(sys.executable)
     subprocess.run([str(python_exe), str(BUILD_SCRIPT)], cwd=ROOT, check=True)
+    subprocess.run([str(python_exe), str(BUILD_PAGES_SCRIPT)], cwd=ROOT, check=True)
+
+
+def find_git() -> Path | None:
+    for candidate in GIT_CANDIDATES:
+        if candidate.exists():
+            return candidate
+    return None
+
+
+def git(repo: Path, *args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
+    git_exe = find_git()
+    if not git_exe:
+        raise FileNotFoundError("No git executable found. Install Git or GitHub Desktop.")
+    return subprocess.run(
+        [str(git_exe), *args],
+        cwd=repo,
+        check=check,
+        text=True,
+        capture_output=True,
+    )
+
+
+def sync_public_site() -> None:
+    if not PUBLIC_WORKTREE.exists():
+        return
+    data_dir = PUBLIC_WORKTREE / "data"
+    data_dir.mkdir(parents=True, exist_ok=True)
+    for name in ("dashboard-data.json", "dashboard-data.js"):
+        source = ROOT / "data" / name
+        dest = data_dir / name
+        shutil.copy2(source, dest)
+    try:
+        status = git(PUBLIC_WORKTREE, "status", "--short", "data/dashboard-data.json", "data/dashboard-data.js")
+    except FileNotFoundError:
+        return
+    if not status.stdout.strip():
+        return
+    git(PUBLIC_WORKTREE, "add", "data/dashboard-data.json", "data/dashboard-data.js")
+    diff_check = git(PUBLIC_WORKTREE, "diff", "--cached", "--quiet", check=False)
+    if diff_check.returncode == 0:
+        return
+    git(PUBLIC_WORKTREE, "commit", "-m", "Refresh dashboard data")
+    git(PUBLIC_WORKTREE, "push", "--force-with-lease", "origin", "gh-pages-deploy:gh-pages")
 
 
 def port_is_open(host: str, port: int) -> bool:
@@ -71,9 +124,12 @@ def watch_input_folder(stop_event: threading.Event) -> None:
             time.sleep(1.5)
             try:
                 run_build()
-                print("Detected Excel change and rebuilt dashboard data.")
+                sync_public_site()
+                print("Detected Excel change and refreshed dashboard data.")
             except subprocess.CalledProcessError as exc:
                 print(f"Build failed: {exc}", file=sys.stderr)
+            except FileNotFoundError as exc:
+                print(f"Sync skipped: {exc}", file=sys.stderr)
         stop_event.wait(2.0)
 
 
@@ -90,6 +146,7 @@ def main() -> int:
 
     print("Building dashboard data...")
     run_build()
+    sync_public_site()
 
     stop_event = threading.Event()
     watcher = threading.Thread(target=watch_input_folder, args=(stop_event,), daemon=True)

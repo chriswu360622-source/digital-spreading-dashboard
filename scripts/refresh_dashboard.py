@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import subprocess
 import sys
+import shutil
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
 BUILD_DATA = ROOT / "scripts" / "build_data.py"
 BUILD_PAGES = ROOT / "scripts" / "build_pages.py"
+PUBLIC_WORKTREE = ROOT.parents[1] / "work" / "gh-pages-deploy"
 RUNTIME_PYTHON = Path(
     r"C:\Users\kobe1\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe"
 )
@@ -44,10 +46,62 @@ def git(*args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
     )
 
 
+def sync_public_site() -> None:
+    if not PUBLIC_WORKTREE.exists():
+        return
+    data_dir = PUBLIC_WORKTREE / "data"
+    data_dir.mkdir(parents=True, exist_ok=True)
+    for name in ("dashboard-data.json", "dashboard-data.js"):
+        shutil.copy2(ROOT / "data" / name, data_dir / name)
+    git_exe = find_git()
+    if not git_exe:
+        return
+    status = subprocess.run(
+        [str(git_exe), "status", "--short", "data/dashboard-data.json", "data/dashboard-data.js"],
+        cwd=PUBLIC_WORKTREE,
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    if not status.stdout.strip():
+        return
+    subprocess.run(
+        [str(git_exe), "add", "data/dashboard-data.json", "data/dashboard-data.js"],
+        cwd=PUBLIC_WORKTREE,
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    diff_check = subprocess.run(
+        [str(git_exe), "diff", "--cached", "--quiet"],
+        cwd=PUBLIC_WORKTREE,
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+    if diff_check.returncode == 0:
+        return
+    subprocess.run(
+        [str(git_exe), "commit", "-m", "Refresh public dashboard data"],
+        cwd=PUBLIC_WORKTREE,
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    subprocess.run(
+        [str(git_exe), "push", "--force-with-lease", "origin", "gh-pages-deploy:gh-pages"],
+        cwd=PUBLIC_WORKTREE,
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+
+
 def main() -> int:
     print("Rebuilding dashboard data...")
     run_python(BUILD_DATA)
     run_python(BUILD_PAGES)
+    sync_public_site()
 
     git_exe = find_git()
     if not git_exe:

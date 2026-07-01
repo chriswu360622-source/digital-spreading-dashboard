@@ -66,6 +66,13 @@ def sync_public_site() -> None:
     if not status.stdout.strip():
         return
     subprocess.run(
+        [str(git_exe), "fetch", "origin", "gh-pages"],
+        cwd=PUBLIC_WORKTREE,
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    subprocess.run(
         [str(git_exe), "add", "data/dashboard-data.json", "data/dashboard-data.js"],
         cwd=PUBLIC_WORKTREE,
         check=True,

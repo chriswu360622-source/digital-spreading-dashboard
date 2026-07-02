@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Digital Spreading Dashboard</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main id="dashboardApp" class="app">
+      <header class="title-bar">
+        <button id="helpButton" class="help-button" type="button">Help</button>
+        <div class="title-wrap">
+          <h1>Digital Spreading Monitoring</h1>
+        </div>
+        <div class="title-spacer" aria-hidden="true"></div>
+      </header>
+
+      <section class="control-band">
+        <div class="control-group date-group">
+          <span class="control-label">Spreading Date</span>
+          <div class="control-row">
+            <input id="startDate" type="date" />
+            <input id="endDate" type="date" />
+          </div>
+        </div>
+        <div class="control-group factory-group">
+          <span class="control-label">Factory</span>
+          <div id="factoryButtons" class="segmented segmented-tight"></div>
+        </div>
+        <div class="control-group table-group">
+          <span class="control-label">Spreading Table</span>
+          <div id="tableButtons" class="segmented"></div>
+        </div>
+        <div class="control-group status-group">
+          <span class="control-label">Spreading Status</span>
+          <select id="statusSelect"></select>
+        </div>
+      </section>
+
+      <section id="kpiGrid" class="kpi-grid"></section>
+
+      <section class="charts-grid">
+        <article class="panel chart-panel">
+          <div class="panel-heading">
+            <h2>Spreader Efficiency</h2>
+            <span>Total Yards + EFF %</span>
+          </div>
+          <div id="spreaderChart" class="chart"></div>
+        </article>
+        <article class="panel chart-panel">
+          <div class="panel-heading">
+            <h2>Machine Utilization</h2>
+            <span>Time, output, completion, utilization</span>
+          </div>
+          <div id="machineChart" class="chart"></div>
+        </article>
+      </section>
+
+      <section class="bottom-grid">
+        <article class="panel">
+          <div class="panel-heading">
+            <h2>Lacking yardage status</h2>
+            <span>Roll variance outside +/-1 yard</span>
+          </div>
+          <div id="varianceChart" class="chart short-chart"></div>
+        </article>
+        <article class="panel table-panel">
+          <div class="panel-heading detail-heading">
+            <span id="rowCount"></span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="sortable" data-sort-key="cutRef">CutRef</th>
+                  <th class="sortable" data-sort-key="spreadingRef">Spreading Ref</th>
+                  <th class="sortable" data-sort-key="seq">Seq</th>
+                  <th class="sortable" data-sort-key="roll">Roll</th>
+                  <th class="sortable" data-sort-key="spreadingTable">Table</th>
+                  <th class="sortable" data-sort-key="spreader">SP#</th>
+                  <th class="sortable" data-sort-key="spreaderName">Spreader</th>
+                  <th class="sortable" data-sort-key="totalYardsSpread">Total Yards (YARD)</th>
+                  <th class="sortable" data-sort-key="damageYard">Damage (YARD)</th>
+                  <th class="sortable" data-sort-key="varianceYard">Variance (YARD)</th>
+                  <th class="sortable" data-sort-key="effPct">EFF %</th>
+                  <th class="sortable" data-sort-key="startTime">Start</th>
+                  <th class="sortable" data-sort-key="endTime">End</th>
+                  <th class="sortable" data-sort-key="spreadingTimeHours">Time</th>
+                  <th class="sortable" data-sort-key="status">Status</th>
+                </tr>
+              </thead>
+              <tbody id="detailBody"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <div id="drillBackdrop" class="drill-backdrop is-hidden"></div>
+
+      <section id="drillPanel" class="panel drill-panel drill-modal is-hidden" aria-modal="true" role="dialog">
+        <div class="panel-heading drill-heading">
+          <div>
+            <h2 id="drillTitle">Selected KPI Detail Preview</h2>
+            <span id="drillSubtitle">Click any KPI card to open the expanded preview below.</span>
+            <span id="drillNote" class="drill-note">Chart and table use the same filtered roll set.</span>
+          </div>
+          <div class="drill-heading-meta">
+            <span id="drillRowCount"></span>
+            <button id="drillReportButton" class="drill-report-button" type="button" aria-label="Download drill report">Report</button>
+            <button id="drillCloseButton" class="drill-close-button" type="button" aria-label="Close drill preview">Close</button>
+          </div>
+        </div>
+        <div class="drill-charts">
+          <article class="panel drill-chart-panel">
+            <div id="drillSpreaderChart" class="chart drill-chart"></div>
+          </article>
+          <article class="panel drill-chart-panel">
+            <div id="drillSpCodeChart" class="chart drill-chart"></div>
+          </article>
+        </div>
+        <article class="panel drill-table-panel">
+          <div class="panel-heading detail-heading">
+            <span id="drillTableLabel">Detail Rows</span>
+          </div>
+          <div class="table-wrap drill-table-wrap">
+            <table class="compact-table">
+              <thead>
+                <tr id="drillTableHead">
+                  <th>CutRef</th>
+                  <th>Spreading Ref</th>
+                  <th>Seq</th>
+                  <th>Roll</th>
+                  <th>Table</th>
+                  <th>SP#</th>
+                  <th>Spreader</th>
+                  <th>Total Yards (YARD)</th>
+                  <th>Damage (YARD)</th>
+                  <th>Variance (YARD)</th>
+                  <th>EFF %</th>
+                  <th>Start</th>
+                  <th>End</th>
+                  <th>Time</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="drillTableBody"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <footer class="app-footer">
+        <span id="generatedAt"></span>
+        <span>Actual work time: 7.5h base, overtime after 16:30 rounded up by 30m.</span>
+      </footer>
+    </main>
+
+    <dialog id="helpDialog" class="help-dialog" aria-labelledby="helpDialogTitle">
+      <div class="help-dialog-shell">
+        <div class="help-dialog-head">
+          <div>
+            <h2 id="helpDialogTitle">Dashboard Data Reference</h2>
+            <p>Source tables, column names, and calculation rules used by this dashboard.</p>
+          </div>
+          <button id="helpCloseButton" class="help-close" type="button" aria-label="Close help">×</button>
+        </div>
+        <div id="helpDialogBody" class="help-dialog-body"></div>
+      </div>
+    </dialog>
+
+    <script>
+      (() => {
+        const loadScript = (src, onload) => {
+          const script = document.createElement("script");
+          script.src = `${src}?ts=${Date.now()}`;
+          if (onload) script.onload = onload;
+          document.body.appendChild(script);
+        };
+        const dataBase = window.location.pathname.endsWith("/src/index.html") ? "../" : "./";
+        loadScript(`${dataBase}data/dashboard-data.js`, () => loadScript("./app.js"));
+      })();
+    </script>
+  </body>
+</html>
